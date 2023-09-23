@@ -3,3 +3,4 @@ plan: false
 vars:
   service: payments-plugin-zen-cart
   squad: juno
+  domain: webshop-payments
