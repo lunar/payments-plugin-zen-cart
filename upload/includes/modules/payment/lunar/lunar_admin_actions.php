@@ -33,7 +33,7 @@ class lunar_admin_actions {
 	 */
 	public function output() {
 		if ( ! $this->fields['transaction_id'] ) {
-			return '<div class="alert alert-danger">' . PL_ORDER_ERROR_TRANSACTION_FAILURE . '</div>';
+			return '<div class="alert alert-danger">' . LUNAR_ORDER_ERROR_TRANSACTION_FAILURE . '</div>';
 		}
 
 
@@ -71,7 +71,7 @@ class lunar_admin_actions {
 	 * @return string
 	 */
 	private function get_void_form() {
-		$void_form = '</div><div class="row pl_form">' . "\n";
+		$void_form = '</div><div class="row lunar_form">' . "\n";
 		$void_form .= zen_draw_form( 'plvoid', FILENAME_ORDERS, zen_get_all_get_params( array( 'action' ) ) . 'action=doVoid', 'post', 'id="void_form"', true ) . zen_hide_session_id() . "\n";
 		$void_form .= '</form>' . "\n";
 
@@ -82,22 +82,22 @@ class lunar_admin_actions {
 	 * @return string
 	 */
 	private function get_refund_form() {
-		$output_refund = '</div><div class="row pl_form" id="pl_refundForm">' . "\n";
+		$output_refund = '</div><div class="row lunar_form" id="lunar_refundForm">' . "\n";
 		$output_refund .= '<table class="table noprint" style="width:100%;border-style:dotted;">' . "\n";
 		$output_refund .= '<tr>' . "\n";
-		$output_refund .= '<td class="main">' . '<strong>'.PL_REFUND_SECTION_TITLE.'</strong>' . '<br />' . "\n";
+		$output_refund .= '<td class="main">' . '<strong>'.LUNAR_REFUND_SECTION_TITLE.'</strong>' . '<br />' . "\n";
 		$output_refund .= zen_draw_form( 'plrefund', FILENAME_ORDERS, zen_get_all_get_params( array( 'action' ) ) . 'action=doRefund', 'post', '', true ) . zen_hide_session_id();
 
 		// full refund
 		if ( $this->refund_total == 0 ) {
-			$output_refund .= PL_ACTION_FULL_REFUND;
-			$output_refund .= '<br /><input type="submit" name="fullrefund" value="' . PL_REFUND_BUTTON_TEXT_FULL . '" title="' . PL_REFUND_BUTTON_TEXT_FULL . '" />' . '<br /><br />';
-			$output_refund .= PL_REFUND_TEXT_FULL_OR;
+			$output_refund .= LUNAR_ACTION_FULL_REFUND;
+			$output_refund .= '<br /><input type="submit" name="fullrefund" value="' . LUNAR_REFUND_BUTTON_TEXT_FULL . '" title="' . LUNAR_REFUND_BUTTON_TEXT_FULL . '" />' . '<br /><br />';
+			$output_refund .= LUNAR_REFUND_TEXT_FULL_OR;
 		}
 
 		//partial refund - input field
-		$output_refund .= PL_REFUND_PARTIAL_TEXT . ' ' . zen_draw_input_field( 'refamt', '', 'length="8" placeholder="'.PL_REFUND_AMOUNT_TEXT.'"' );
-		$output_refund .= '<input type="submit" name="partialrefund" value="' . PL_REFUND_BUTTON_TEXT_PARTIAL . '" title="' . PL_REFUND_BUTTON_TEXT_PARTIAL . '" /><br />';
+		$output_refund .= LUNAR_REFUND_PARTIAL_TEXT . ' ' . zen_draw_input_field( 'refamt', '', 'length="8" placeholder="'.LUNAR_REFUND_AMOUNT_TEXT.'"' );
+		$output_refund .= '<input type="submit" name="partialrefund" value="' . LUNAR_REFUND_BUTTON_TEXT_PARTIAL . '" title="' . LUNAR_REFUND_BUTTON_TEXT_PARTIAL . '" /><br />';
 		$output_refund .= zen_draw_hidden_field( 'refundedAmt', $this->refund_total ) . '<br />';
 
 		//message text
@@ -111,7 +111,7 @@ class lunar_admin_actions {
 	 * @return string
 	 */
 	private function get_capture_form() {
-		$output_capture = '</div><div class="row pl_form">' . "\n";
+		$output_capture = '</div><div class="row lunar_form">' . "\n";
 		$output_capture .= zen_draw_form( 'plcapture', FILENAME_ORDERS, zen_get_all_get_params( array( 'action' ) ) . 'action=doCapture', 'post', 'id="capture_form"', true ) . zen_hide_session_id() . "\n";
 		$output_capture .= '</form>' . "\n";
 
@@ -123,18 +123,18 @@ class lunar_admin_actions {
 	 */
 	private function get_table() {
 		$payment_status = [
-			'authorize'      => PL_STATUS_AUTHORIZED,
-			'capture'        => PL_STATUS_CAPTURED,
-			'partial_refund' => PL_STATUS_PARTIALLY_REFUNDED,
-			'refund'         => PL_STATUS_REFUNDED,
-			'void'           => PL_STATUS_CANCELLED
+			'authorize'      => LUNAR_STATUS_AUTHORIZED,
+			'capture'        => LUNAR_STATUS_CAPTURED,
+			'partial_refund' => LUNAR_STATUS_PARTIALLY_REFUNDED,
+			'refund'         => LUNAR_STATUS_REFUNDED,
+			'void'           => LUNAR_STATUS_CANCELLED
 		];
 
 		$table = '<tr class="dataTableHeadingRow">' . "\n";
-		$table .= '<th class="dataTableHeadingContent">' . PL_TEXT_TXN_ID . '</th>' . "\n";
-		$table .= '<th class="dataTableHeadingContent">' . PL_TEXT_PAYMENT_STATUS . '</th>' . "\n";
-		$table .= '<th class="dataTableHeadingContent">' . nl2br( PL_TEXT_PAYMENT_DATE, false ) . '</th>' . "\n";
-		$table .= '<th class="dataTableHeadingContent">' . PL_TEXT_ACTION . '</th>' . "\n";
+		$table .= '<th class="dataTableHeadingContent">' . LUNAR_TEXT_TXN_ID . '</th>' . "\n";
+		$table .= '<th class="dataTableHeadingContent">' . LUNAR_TEXT_PAYMENT_STATUS . '</th>' . "\n";
+		$table .= '<th class="dataTableHeadingContent">' . nl2br( LUNAR_TEXT_PAYMENT_DATE, false ) . '</th>' . "\n";
+		$table .= '<th class="dataTableHeadingContent">' . LUNAR_TEXT_ACTION . '</th>' . "\n";
 		$table .= '</tr>' . "\n";
 		// values
 		$table .= '<tr class="dataTableRow">' . "\n";
@@ -152,9 +152,9 @@ class lunar_admin_actions {
 	 */
 	private function get_buttons_list() {
 		$buttons_list   = '';
-		$capture_button = '<a href="javascript:void(0)" id="capture_click" title="'.PL_CAPTURE_BUTTON_TEXT_FULL.'" style="padding-right:10px;"><i class="fa fa-check-circle" style="margin-right:5px;" aria-hidden="true"></i>'.PL_CAPTURE_BUTTON_TEXT_FULL.'</a>';
-		$refund_button  = '<a href="javascript:void(0)" id="refund_click" title="'.PL_REFUND_BUTTON_TEXT.'" style="padding-right:10px;"><i class="fa fa-reply-all" style="margin-right:5px;" aria-hidden="true"></i>'.PL_REFUND_BUTTON_TEXT.'</a>';
-		$void_button    = '<a href="javascript:void(0)" id="void_click" title="'.PL_VOID_BUTTON_TEXT_FULL.'" style="padding-right:10px;"><i class="fa fa-times-circle" style="margin-right:5px;" aria-hidden="true"></i>'.PL_VOID_BUTTON_TEXT_FULL.'</a>';
+		$capture_button = '<a href="javascript:void(0)" id="capture_click" title="'.LUNAR_CAPTURE_BUTTON_TEXT_FULL.'" style="padding-right:10px;"><i class="fa fa-check-circle" style="margin-right:5px;" aria-hidden="true"></i>'.LUNAR_CAPTURE_BUTTON_TEXT_FULL.'</a>';
+		$refund_button  = '<a href="javascript:void(0)" id="refund_click" title="'.LUNAR_REFUND_BUTTON_TEXT.'" style="padding-right:10px;"><i class="fa fa-reply-all" style="margin-right:5px;" aria-hidden="true"></i>'.LUNAR_REFUND_BUTTON_TEXT.'</a>';
+		$void_button    = '<a href="javascript:void(0)" id="void_click" title="'.LUNAR_VOID_BUTTON_TEXT_FULL.'" style="padding-right:10px;"><i class="fa fa-times-circle" style="margin-right:5px;" aria-hidden="true"></i>'.LUNAR_VOID_BUTTON_TEXT_FULL.'</a>';
 		if ( ! $this->capture_total && ! $this->refund_total && ! $this->void_total ) {
 			$buttons_list .= $capture_button . $void_button;
 		}
@@ -171,9 +171,9 @@ class lunar_admin_actions {
 	private function get_javascript() {
 		return '<script>
 				    $(window).on("load", function() {
-				      $(".pl_form").hide();
+				      $(".lunar_form").hide();
 				      $(document).on("click", "#refund_click", function () {
-				        $("#pl_refundForm").toggle();
+				        $("#lunar_refundForm").toggle();
 				      });
 				      $(document).on("click", "#capture_click", function () {
 				        $("#capture_form").submit();

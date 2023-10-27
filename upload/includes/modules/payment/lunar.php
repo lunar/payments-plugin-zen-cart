@@ -62,15 +62,15 @@ class lunar extends base {
 		}
 		switch ( MODULE_PAYMENT_LUNAR_TXN_MODE ) {
 			case 'Test':
-				$testingTitle = '<span class="alert"> (' . PL_WARNING_TESTING . ')</span>';
+				$testingTitle = '<span class="alert"> (' . LUNAR_WARNING_TESTING . ')</span>';
 				if ( MODULE_PAYMENT_LUNAR_TEST_APPKEY == '' || MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY == '' ) {
-					$testingTitle = '<span class="alert"> (' . PL_WARNING_TESTING_NOT_CONFIGURED . ')</span>';
+					$testingTitle = '<span class="alert"> (' . LUNAR_WARNING_TESTING_NOT_CONFIGURED . ')</span>';
 				}
 				$this->title .= $testingTitle;
 				break;
 			case 'Live':
 				if ( MODULE_PAYMENT_LUNAR_LIVE_APPKEY == '' || MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY == '' ) {
-					$liveTitle   = '<span class="alert"> (' . PL_WARNING_LIVE_NOT_CONFIGURED . ')</span>';
+					$liveTitle   = '<span class="alert"> (' . LUNAR_WARNING_LIVE_NOT_CONFIGURED . ')</span>';
 					$this->title .= $liveTitle;
 				}
 				break;
@@ -169,13 +169,13 @@ class lunar extends base {
 		switch ( MODULE_PAYMENT_LUNAR_TXN_MODE ) {
 			case 'Test':
 				if ( MODULE_PAYMENT_LUNAR_TEST_APPKEY == '' || MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY == '' ) {
-					$messageStack->add_session( 'checkout_payment', PL_WARNING_TESTING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
+					$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_TESTING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
 					zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 				}
 				break;
 			case 'Live':
 				if ( MODULE_PAYMENT_LUNAR_LIVE_APPKEY == '' || MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY == '' ) {
-					$messageStack->add_session( 'checkout_payment', PL_WARNING_LIVE_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
+					$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_LIVE_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
 					zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 				}
 				break;
@@ -282,7 +282,7 @@ class lunar extends base {
 		global $order, $messageStack, $currencies;
 
 		if ( $_POST['txn_no'] == null || $_POST['txn_no'] == '' ) {
-			$messageStack->add_session( 'checkout_payment', PL_ORDER_ERROR_TRANSACTION_MISSING . ' <!-- [' . $this->code . '] -->', 'error' );
+			$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISSING . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 
 			return;
@@ -291,7 +291,7 @@ class lunar extends base {
 		$lunar_admin = new lunar_admin();
 		$response      = $lunar_admin->getTransactionHistory( $this->app_id, $_POST['txn_no'] );
 		if ( ! sizeof( $response ) ) {
-			$messageStack->add_session( 'checkout_payment', PL_ORDER_ERROR_TRANSACTION_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
+			$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 
 			return;
@@ -299,7 +299,7 @@ class lunar extends base {
 		// amount convert based on currency
 		$amount = cf_lunar_amount( $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']), $order->info['currency'] );
 		if ( (int) $response['amount'] != (int) $amount ) {
-			$messageStack->add_session( 'checkout_payment', PL_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
+			$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 
 			return;
@@ -344,7 +344,7 @@ class lunar extends base {
 	function update_order_history( $order, $data, $order_id ) {
 		global $currencies;
 		// TABLE_ORDERS_STATUS_HISTORY
-		$comments = PL_COMMENT_AUTHORIZE . $data['transaction_id'] . "\n" . PL_COMMENT_AMOUNT . number_format( (float) $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']), 2, '.', '' ) . ' ' . $data['currency'];
+		$comments = LUNAR_COMMENT_AUTHORIZE . $data['transaction_id'] . "\n" . LUNAR_COMMENT_AMOUNT . number_format( (float) $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']), 2, '.', '' ) . ' ' . $data['currency'];
 		$sql1     = [
 			'comments'          => $comments,
 			'orders_id'         => (int) $order_id,
