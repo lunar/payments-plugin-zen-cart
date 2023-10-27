@@ -1,4 +1,4 @@
-# ZenCart plugin for Lunar
+# Lunar Online Payments for ZenCart
 
 The software is provided “as is”, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement.
 
@@ -54,3 +54,9 @@ The following actions are available by clicking on the `Click for Additional Pay
 3. Void
    * Zencart admin panel: full void
    * Lunar admin panel: full/partial void
+
+
+## Changelog
+
+### 1.0.0
+- Initial commit

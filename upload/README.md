@@ -1,1 +1,1 @@
-# ZenCart plugin for Lunar
+# Lunar Online Payments for ZenCart
