@@ -1,12 +1,12 @@
 <?php
-/** Prevent double load of PHP API library. */
-if (! class_exists('Paylike\\Paylike') ) {
-	require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lunar/php-api/init.php' );
+/** Prevent double load of API SDK library. */
+if (! class_exists('Lunar\\Lunar') ) {
+	require_once( __DIR__ . '/lunar/vendor/autoload.php' );
 }
-require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lunar/lunar_admin.php' );
-require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lunar/lunar.php' );
-require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lunar/lunar_admin_actions.php' );
-require_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'lunar/lunar_currencies.php' );
+require_once( __DIR__ . '/lunar/lunar_admin.php' );
+require_once( __DIR__ . '/lunar/lunar.php' );
+require_once( __DIR__ . '/lunar/lunar_admin_actions.php' );
+require_once( __DIR__ . '/lunar/lunar_currencies.php' );
 
 /**
  *  Zencart
@@ -48,7 +48,6 @@ class lunar extends base {
 		if ( IS_ADMIN_FLAG === true ) {
 			$this->tableCheckup();
 		}
-		$this->set_version();
 
 	}
 
@@ -76,20 +75,6 @@ class lunar extends base {
 				break;
 		}
 
-	}
-
-	/**
-	 *  Check file and set version
-	 */
-	function set_version() {
-		$version_file = dirname( __FILE__ ) . DIRECTORY_SEPARATOR . '/lunar_version.txt';
-		if ( file_exists( $version_file ) ) {
-			$handle = fopen( $version_file, 'r' );
-			if ( $handle ) {
-				$data              = fread( $handle, filesize( $version_file ) );
-				$this->description .= " plugin updated on " . date( "d F Y", strtotime( $data ) );
-			}
-		}
 	}
 
 	/**

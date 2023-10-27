@@ -5,33 +5,6 @@
  */
 
 class lunar_admin {
-
-	/**
-	 * constructor
-	 */
-	function __construct() {
-
-		/**
-		 * If not debug mode we hide following elements
-		 * - test keys inputs
-		 * - p elements with test-mode class (descriptions)
-		 * - "Live" text when in view mode
-		 */
-		if (!isset($_GET['debug'])) {
-			echo '<script>
-				jQuery().ready(() => {
-					jQuery("input[name*=MODULE_PAYMENT_LUNAR_TXN_MODE]").parents("div.radio").hide();
-					jQuery("input[name*=MODULE_PAYMENT_LUNAR_TEST_APPKEY]").hide();
-					jQuery("input[name*=MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY]").hide();
-					jQuery(".test-mode").hide();
-					jQuery(`div.infoBoxContent:contains("Live")`).each(function(){
-						$(this).html($(this).html().split("Live").join(""));
-					});
-				});
-			</script>';
-		}
-	}
-
 	/**
 	 * install lunar payment model
 	 *
