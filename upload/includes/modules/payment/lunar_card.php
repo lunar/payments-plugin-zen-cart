@@ -14,7 +14,7 @@ use Lunar\Payment\helpers\LunarHelper;
 /**
  *  Copyright (c) 2022 Lunar
  */
-class lunar extends base {
+class lunar_card extends base {
 
 	var $code, $title, $description, $sort_order, $enabled, $form_action_url;
 	
