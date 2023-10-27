@@ -8,12 +8,14 @@ require_once( __DIR__ . '/lunar/lunar.php' );
 require_once( __DIR__ . '/lunar/lunar_admin_actions.php' );
 require_once( __DIR__ . '/lunar/lunar_currencies.php' );
 
+
+use Lunar\Payment\helpers\LunarHelper;
+
 /**
  *  Copyright (c) 2022 Lunar
  */
 class lunar extends base {
 
-	const LUNAR_MODULE_VERSION = '1.0.0';
 	var $code, $title, $description, $sort_order, $enabled, $form_action_url;
 	
 	/**
@@ -23,7 +25,7 @@ class lunar extends base {
 		global $order;
 
 		$this->enabled         = defined( 'MODULE_PAYMENT_LUNAR_STATUS' ) && MODULE_PAYMENT_LUNAR_STATUS == 'True'; // Whether the module is installed or not
-		$this->code            = 'lunar';
+		$this->code            = 'lunar_card';
 		$this->title           = MODULE_PAYMENT_LUNAR_TEXT_TITLE;
 		$this->description     = MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION; // Descriptive Info about module in Admin
 		$this->form_action_url = '';
@@ -169,7 +171,6 @@ class lunar extends base {
 				'ip'      => $_SERVER['REMOTE_ADDR']
 			],
 			'version'    => PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR . ( PROJECT_VERSION_PATCH1 != '' ? 'p' . PROJECT_VERSION_PATCH1 : '' ),
-			'lunar_module_version' => self::LUNAR_MODULE_VERSION,
 		];
 
 		return get_lunar_pay_script( $payment_payload );
