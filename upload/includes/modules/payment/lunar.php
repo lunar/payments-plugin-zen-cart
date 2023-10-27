@@ -9,7 +9,6 @@ require_once( __DIR__ . '/lunar/lunar_admin_actions.php' );
 require_once( __DIR__ . '/lunar/lunar_currencies.php' );
 
 /**
- *  Zencart
  *  Copyright (c) 2022 Lunar
  */
 class lunar extends base {
@@ -24,10 +23,7 @@ class lunar extends base {
 		global $order;
 
 		// init api client
-		$this->app_id = MODULE_PAYMENT_LUNAR_TEST_APPKEY;
-		if ( MODULE_PAYMENT_LUNAR_TXN_MODE === 'Live' ) {
-			$this->app_id = MODULE_PAYMENT_LUNAR_LIVE_APPKEY;
-		}
+		$this->app_id = MODULE_PAYMENT_LUNAR_APP_KEY;
 
 		$this->enabled         = defined( 'MODULE_PAYMENT_LUNAR_STATUS' ) && MODULE_PAYMENT_LUNAR_STATUS == 'True'; // Whether the module is installed or not
 		$this->code            = 'lunar';
@@ -49,32 +45,18 @@ class lunar extends base {
 			$this->tableCheckup();
 		}
 
+		
+
 	}
 
 	/**
 	 *  Based on plugin state set warning
 	 */
 	function maybe_add_title_warning() {
-		// Payment module title in Admin
-		if ( ! defined( 'MODULE_PAYMENT_LUNAR_TXN_MODE' ) ) {
-			return;
+		if ( MODULE_PAYMENT_LUNAR_APP_KEY == '' || MODULE_PAYMENT_LUNAR_PUBLIC_KEY == '' ) {
+			$liveTitle   = '<span class="alert"> (' . LUNAR_WARNING_NOT_CONFIGURED . ')</span>';
+			$this->title .= $liveTitle;
 		}
-		switch ( MODULE_PAYMENT_LUNAR_TXN_MODE ) {
-			case 'Test':
-				$testingTitle = '<span class="alert"> (' . LUNAR_WARNING_TESTING . ')</span>';
-				if ( MODULE_PAYMENT_LUNAR_TEST_APPKEY == '' || MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY == '' ) {
-					$testingTitle = '<span class="alert"> (' . LUNAR_WARNING_TESTING_NOT_CONFIGURED . ')</span>';
-				}
-				$this->title .= $testingTitle;
-				break;
-			case 'Live':
-				if ( MODULE_PAYMENT_LUNAR_LIVE_APPKEY == '' || MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY == '' ) {
-					$liveTitle   = '<span class="alert"> (' . LUNAR_WARNING_LIVE_NOT_CONFIGURED . ')</span>';
-					$this->title .= $liveTitle;
-				}
-				break;
-		}
-
 	}
 
 	/**
@@ -148,24 +130,10 @@ class lunar extends base {
 	 */
 	function maybe_show_frontend_warnings() {
 		global $messageStack;
-		if ( ! defined( 'MODULE_PAYMENT_LUNAR_TXN_MODE' ) ) {
-			return;
+		if ( MODULE_PAYMENT_LUNAR_APP_KEY == '' || MODULE_PAYMENT_LUNAR_PUBLIC_KEY == '' ) {
+			$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
+			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 		}
-		switch ( MODULE_PAYMENT_LUNAR_TXN_MODE ) {
-			case 'Test':
-				if ( MODULE_PAYMENT_LUNAR_TEST_APPKEY == '' || MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY == '' ) {
-					$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_TESTING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
-					zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
-				}
-				break;
-			case 'Live':
-				if ( MODULE_PAYMENT_LUNAR_LIVE_APPKEY == '' || MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY == '' ) {
-					$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_LIVE_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
-					zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
-				}
-				break;
-		}
-
 	}
 
 	/**
@@ -189,9 +157,7 @@ class lunar extends base {
 
 		// construct payment payload
 		$payment_payload = [
-			'publicId'   => $this->get_public_key(),
-			'popUpTitle' => MODULE_PAYMENT_LUNAR_POPUP_TEXT_TITLE,
-			'test_mode'  => ("Test" == MODULE_PAYMENT_LUNAR_TXN_MODE) ? ('true') : ('false'),
+			'publicId'   => MODULE_PAYMENT_LUNAR_PUBLIC_KEY,
 			'currency'   => $order->info['currency'],
 			'amount'     => cf_lunar_amount( $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']), $order->info['currency'] ),
 			'exponent'   => cf_lunar_currency($order->info['currency'])['exponent'],
@@ -210,33 +176,6 @@ class lunar extends base {
 		];
 
 		return get_lunar_pay_script( $payment_payload );
-	}
-
-	/**
-	 * @return int|string
-	 */
-	function get_order_id() {
-		global $db;
-		$new_order_id = '';
-		if ( MODULE_PAYMENT_LUNAR_CHECKOUT_MODE == 'True' ) {
-			$last_order_id = $db->Execute( "select * from " . TABLE_ORDERS . " order by orders_id desc limit 1" );
-			$new_order_id  = (int) $last_order_id->fields['orders_id'] + 1;
-		}
-
-		return $new_order_id;
-	}
-
-	/**
-	 * @return mixed
-	 */
-	function get_public_key() {
-		// lunar public key
-		$public_key = MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY;
-		if ( MODULE_PAYMENT_LUNAR_TXN_MODE === 'Live' ) {
-			$public_key = MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY;
-		}
-
-		return $public_key;
 	}
 
 	/**
@@ -266,7 +205,7 @@ class lunar extends base {
 	function before_process() {
 		global $order, $messageStack, $currencies;
 
-		if ( $_POST['txn_no'] == null || $_POST['txn_no'] == '' ) {
+		if ( empty($_POST['txn_no']) ) {
 			$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISSING . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 

@@ -13,55 +13,42 @@ class lunar_admin {
 	public function install() {
 		global $db;
 
-		$site_title = defined( 'STORE_NAME' ) ? STORE_NAME : '';
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              values ('" . LUNAR_ADMIN_ENABLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_STATUS', 'True', '" . LUNAR_ADMIN_ENABLE_DESCRIPTION . "', '6', '1', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now());" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		              VALUES ('" . LUNAR_ADMIN_ENABLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_STATUS', 'True', '" . LUNAR_ADMIN_ENABLE_DESCRIPTION . "', '6', '1', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now());" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+					VALUES ('" . LUNAR_ADMIN_APP_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_APP_KEY', '', '" . LUNAR_ADMIN_APP_KEY_DESCRIPTION . "', '6', '2', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+					VALUES ('" . LUNAR_ADMIN_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_PUBLIC_KEY', '', '" . LUNAR_ADMIN_PUBLIC_KEY_DESCRIPTION . "', '6', '3', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              values ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              values ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		             values ('" . LUNAR_ADMIN_POPUP_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_POPUP_TEXT_TITLE', '" . $site_title . "', '" . LUNAR_ADMIN_POPUP_TITLE_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		              VALUES ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '5', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              values ('" . LUNAR_ADMIN_TRANSACTION_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TXN_MODE', '" . LUNAR_ADMIN_TRANSACTION_MODE_VALUE . "', '" . LUNAR_ADMIN_TRANSACTION_MODE_DESCRIPTION . "', '6', '2', 'zen_cfg_select_option(array(\'Live\', \'Test\'), ', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		              VALUES ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '6', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\'), ', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              values ('" . LUNAR_ADMIN_TEST_MODE_APP_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEST_APPKEY', '', '" . LUNAR_ADMIN_TEST_MODE_APP_KEY_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              values ('" . LUNAR_ADMIN_TEST_MODE_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY', '', '" . LUNAR_ADMIN_TEST_MODE_PUBLIC_KEY_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		             values ('" . LUNAR_ADMIN_LIVE_MODE_APP_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_LIVE_APPKEY', '', '" . LUNAR_ADMIN_LIVE_MODE_APP_KEY_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		             values ('" . LUNAR_ADMIN_LIVE_MODE_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY', '', '" . LUNAR_ADMIN_LIVE_MODE_PUBLIC_KEY_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              values ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '2', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\'), ', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              values ('" . LUNAR_ADMIN_CHECKOUT_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CHECKOUT_MODE', 'False', '" . LUNAR_ADMIN_CHECKOUT_MODE_DESCRIPTION . "', '6', '2', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		             VALUES ('" . LUNAR_ADMIN_SHOP_TITLE . "', 'MODULE_PAYMENT_LUNAR_SHOP_TITLE', '" . (defined( 'STORE_NAME' ) ? STORE_NAME : '') . "', '" . LUNAR_ADMIN_SHOP_DESCRIPTION . "', '6', '7', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added)
-		              values ('" . LUNAR_ADMIN_PAYMENT_ZONE_TITLE . "', 'MODULE_PAYMENT_LUNAR_ZONE', '0', '" . LUNAR_ADMIN_PAYMENT_ZONE_DESCRIPTION . "', '6', '2', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		              VALUES ('" . LUNAR_ADMIN_PAYMENT_ZONE_TITLE . "', 'MODULE_PAYMENT_LUNAR_ZONE', '0', '" . LUNAR_ADMIN_PAYMENT_ZONE_DESCRIPTION . "', '6', '8', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               values ('" . LUNAR_ADMIN_CAPTURE_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID', '2', '" . LUNAR_ADMIN_CAPTURE_STATUS_DESCRIPTION . "', '6', '6', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		               VALUES ('" . LUNAR_ADMIN_CAPTURE_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID', '2', '" . LUNAR_ADMIN_CAPTURE_STATUS_DESCRIPTION . "', '6', '9', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               values ('" . LUNAR_ADMIN_REFUND_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_REFUND_STATUS_DESCRIPTION . "', '6', '7', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		               VALUES ('" . LUNAR_ADMIN_REFUND_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_REFUND_STATUS_DESCRIPTION . "', '6', '10', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               values ('" . LUNAR_ADMIN_CANCEL_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_CANCEL_STATUS_DESCRIPTION . "', '6', '7', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "insert into " . TABLE_CONFIGURATION .
+		               VALUES ('" . LUNAR_ADMIN_CANCEL_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_CANCEL_STATUS_DESCRIPTION . "', '6', '11', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		               values ('" . LUNAR_ADMIN_SORT_ORDER_TITLE . "', 'MODULE_PAYMENT_LUNAR_SORT_ORDER', '0', '" . LUNAR_ADMIN_SORT_ORDER_DESCRIPTION . "', '6', '0', now())" );
+		               VALUES ('" . LUNAR_ADMIN_SORT_ORDER_TITLE . "', 'MODULE_PAYMENT_LUNAR_SORT_ORDER', '0', '" . LUNAR_ADMIN_SORT_ORDER_DESCRIPTION . "', '6', '12', now())" );
 	}
 
 	/**
@@ -93,17 +80,11 @@ class lunar_admin {
 	public function keys() {
 		return array(
 			'MODULE_PAYMENT_LUNAR_STATUS',
+			'MODULE_PAYMENT_LUNAR_APP_KEY',
+			'MODULE_PAYMENT_LUNAR_PUBLIC_KEY',
 			'MODULE_PAYMENT_LUNAR_TEXT_TITLE',
 			'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION',
-			'MODULE_PAYMENT_LUNAR_POPUP_TEXT_TITLE',
-			'MODULE_PAYMENT_LUNAR_TXN_MODE',
-			//'MODULE_PAYMENT_LUNAR_LIVEURL',
-			'MODULE_PAYMENT_LUNAR_LIVE_APPKEY',
-			'MODULE_PAYMENT_LUNAR_LIVE_PUBLICKEY',
-			//'MODULE_PAYMENT_LUNAR_TESTURL',
-			'MODULE_PAYMENT_LUNAR_TEST_APPKEY',
-			'MODULE_PAYMENT_LUNAR_TEST_PUBLICKEY',
-			'MODULE_PAYMENT_LUNAR_CHECKOUT_MODE',
+			'MODULE_PAYMENT_LUNAR_SHOP_TITLE',
 			'MODULE_PAYMENT_LUNAR_CAPTURE_MODE',
 			'MODULE_PAYMENT_LUNAR_ACCEPTED_CARDS',
 			'MODULE_PAYMENT_LUNAR_ZONE',
