@@ -5,94 +5,12 @@
  */
 
 class lunar_admin {
-	/**
-	 * install lunar payment model
-	 *
-	 * @global type $db
-	 */
-	public function install() {
-		global $db;
-
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              VALUES ('" . LUNAR_ADMIN_ENABLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_STATUS', 'True', '" . LUNAR_ADMIN_ENABLE_DESCRIPTION . "', '6', '1', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now());" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-					VALUES ('" . LUNAR_ADMIN_APP_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_APP_KEY', '', '" . LUNAR_ADMIN_APP_KEY_DESCRIPTION . "', '6', '2', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-					VALUES ('" . LUNAR_ADMIN_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_PUBLIC_KEY', '', '" . LUNAR_ADMIN_PUBLIC_KEY_DESCRIPTION . "', '6', '3', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              VALUES ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '5', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              VALUES ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '6', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\'), ', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		             VALUES ('" . LUNAR_ADMIN_SHOP_TITLE . "', 'MODULE_PAYMENT_LUNAR_SHOP_TITLE', '" . (defined( 'STORE_NAME' ) ? STORE_NAME : '') . "', '" . LUNAR_ADMIN_SHOP_DESCRIPTION . "', '6', '7', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added)
-		              VALUES ('" . LUNAR_ADMIN_PAYMENT_ZONE_TITLE . "', 'MODULE_PAYMENT_LUNAR_ZONE', '0', '" . LUNAR_ADMIN_PAYMENT_ZONE_DESCRIPTION . "', '6', '8', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               VALUES ('" . LUNAR_ADMIN_CAPTURE_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID', '2', '" . LUNAR_ADMIN_CAPTURE_STATUS_DESCRIPTION . "', '6', '9', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               VALUES ('" . LUNAR_ADMIN_REFUND_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_REFUND_STATUS_DESCRIPTION . "', '6', '10', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
-		               VALUES ('" . LUNAR_ADMIN_CANCEL_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_CANCEL_STATUS_DESCRIPTION . "', '6', '11', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
-		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
-		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		               VALUES ('" . LUNAR_ADMIN_SORT_ORDER_TITLE . "', 'MODULE_PAYMENT_LUNAR_SORT_ORDER', '0', '" . LUNAR_ADMIN_SORT_ORDER_DESCRIPTION . "', '6', '12', now())" );
-	}
 
 	/**
-	 * remove module
-	 *
-	 * @global type $db
+	 * constructor
 	 */
-	public function remove() {
-		global $db;
-		$db->Execute( "delete from " . TABLE_CONFIGURATION . " where configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_%'" );
-	}
-
-	/**
-	 * install lunar payment model
-	 *
-	 */
-	public function create_table_lunar() {
-		global $db;
-		$db->Execute( "create table lunar (id INT NOT NULL AUTO_INCREMENT, customer_id INT NOT NULL DEFAULT 0, order_id INT NOT NULL DEFAULT 0,
- authorization_type VARCHAR(50) NOT NULL, transaction_status ENUM('authorize', 'capture', 'partial_refund', 'refund', 'void') DEFAULT 'authorize',
-  transaction_id VARCHAR(100) NOT NULL, time VARCHAR(50) NOT NULL, session_id VARCHAR(255) NOT NULL, PRIMARY KEY (id) );" );
-	}
-
-	/**
-	 * keys
-	 *
-	 * @return array
-	 */
-	public function keys() {
-		return array(
-			'MODULE_PAYMENT_LUNAR_STATUS',
-			'MODULE_PAYMENT_LUNAR_APP_KEY',
-			'MODULE_PAYMENT_LUNAR_PUBLIC_KEY',
-			'MODULE_PAYMENT_LUNAR_TEXT_TITLE',
-			'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION',
-			'MODULE_PAYMENT_LUNAR_SHOP_TITLE',
-			'MODULE_PAYMENT_LUNAR_CAPTURE_MODE',
-			'MODULE_PAYMENT_LUNAR_ACCEPTED_CARDS',
-			'MODULE_PAYMENT_LUNAR_ZONE',
-			'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID',
-			'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID',
-			'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID',
-			'MODULE_PAYMENT_LUNAR_SORT_ORDER'
-		);
+	function __construct() {
+		$this->apiClient = new Lunar(MODULE_PAYMENT_LUNAR_APP_KEY, null, !!$_COOKIE['lunar_testmode']);
 	}
 
 
@@ -104,11 +22,9 @@ class lunar_admin {
 	 *
 	 * @return array
 	 */
-	public function getTransactionHistory( $app_id, $transaction_id ) {
+	public function getTransactionHistory( $transaction_id ) {
 		try {
-			// transaction history
-			$api_client  = new Paylike\Paylike( $app_id );
-			$lunar_history = $api_client->transactions()->fetch( $transaction_id );
+			$lunar_history = $this->apiClient->transactions()->fetch( $transaction_id );
 			if ( $lunar_history['successful'] ) {
 				return $lunar_history;
 			}
@@ -116,7 +32,7 @@ class lunar_admin {
 			$error = LUNAR_COMMENT_TRANSACTION_FETCH_ISSUE . $transaction_id;
 			lunar_debug( $error, __LINE__, __FILE__ );
 
-		} catch ( \Paylike\Exception\ApiException $exception ) {
+		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_TRANSACTION_FETCH_ISSUE . $transaction_id;
 			$this->recordError( $exception, __LINE__, __FILE__, null, $error );
 		}
@@ -138,7 +54,7 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function capture( $app_id, $order_id, $captureType, $amount, $currency, $note, $silent = false ) {
+	function capture( $order_id, $captureType, $amount, $currency, $note, $silent = false ) {
 		global $db, $messageStack, $order, $currencies;
 		/** Convert amount to order currency */
 		$amount_converted = $currencies->value($amount, true, $order->info['currency'], $order->info['currency_value']);
@@ -163,8 +79,7 @@ class lunar_admin {
 			// amount convert based on currency
 			$captureAmount = cf_lunar_amount( $amount_converted, $currency );
 
-			$api_client  = new Paylike\Paylike( $app_id );
-			$lunar_capture = $api_client->transactions()->capture( $transaction_ID, array(
+			$lunar_capture = $this->apiClient->transactions()->capture( $transaction_ID, array(
 				'amount'   => $captureAmount,
 				'currency' => $currency
 			) );
@@ -191,7 +106,7 @@ class lunar_admin {
 
 				return false;
 			}
-		} catch ( \Paylike\Exception\ApiException $exception ) {
+		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_CAPTURE_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 			$message=$this->recordError( $exception, __LINE__, __FILE__, $messageStack, $error );
 
@@ -216,7 +131,7 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function refund( $app_id, $order_id, $amount, $note ) {
+	function refund( $order_id, $amount, $note ) {
 		global $db, $messageStack, $order, $currencies;
 		/** Convert amount to order currency */
 		$order_total_converted = $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']);
@@ -257,8 +172,7 @@ class lunar_admin {
 				$new_order_status = (int) $order->info['orders_status'];
 			}
 
-			$api_client = new Paylike\Paylike( $app_id );
-			$lunar_refund = $api_client->transactions()->refund( $transaction_ID, array(
+			$lunar_refund = $this->apiClient->transactions()->refund( $transaction_ID, array(
 				'amount' => $refundAmount
 			) );
 			if ( $lunar_refund['successful'] ) {
@@ -278,7 +192,7 @@ class lunar_admin {
 
 				return false;
 			}
-		} catch ( \Paylike\Exception\ApiException $exception ) {
+		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_REFUND_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 			$this->recordError( $exception, __LINE__, __FILE__, $messageStack, $error );
 
@@ -297,7 +211,7 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function void( $app_id, $order_id, $note ) {
+	function void( $order_id, $note ) {
 		global $db, $messageStack, $order, $currencies;
 		/** Convert amount to order currency */
 		$order_total_converted = $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']);
@@ -317,8 +231,7 @@ class lunar_admin {
 			// amount convert based on currency
 			$voidAmt = cf_lunar_amount( $order_total_converted, $currency );
 
-			$api_client = new Paylike\Paylike( $app_id );
-			$lunar_void   = $api_client->transactions()->void( $transaction_ID, array(
+			$lunar_void   = $this->apiClient->transactions()->void( $transaction_ID, array(
 				'amount' => $voidAmt
 			) );
 
@@ -338,7 +251,7 @@ class lunar_admin {
 
 				return false;
 			}
-		} catch ( \Paylike\Exception\ApiException $exception ) {
+		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_VOID_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 			$this->recordError( $exception, __LINE__, __FILE__, $messageStack, $error );
 
@@ -414,25 +327,25 @@ class lunar_admin {
 		$exception_type = get_class( $exception );
 		$message        = '';
 		switch ( $exception_type ) {
-			case 'Paylike\\Exception\\NotFound':
+			case 'Lunar\\Exception\\NotFound':
 				$message = LUNAR_ERROR_NOT_FOUND;
 				break;
-			case 'Paylike\\Exception\\InvalidRequest':
+			case 'Lunar\\Exception\\InvalidRequest':
 				$message = LUNAR_ERROR_INVALID_REQUEST;
 				break;
-			case 'Paylike\\Exception\\Forbidden':
+			case 'Lunar\\Exception\\Forbidden':
 				$message = LUNAR_ERROR_FORBIDDEN;
 				break;
-			case 'Paylike\\Exception\\Unauthorized':
+			case 'Lunar\\Exception\\Unauthorized':
 				$message = LUNAR_ERROR_UNAUTHORIZED;
 				break;
-			case 'Paylike\\Exception\\Conflict':
+			case 'Lunar\\Exception\\Conflict':
 				$message = LUNAR_ERROR_CONFLICT;
 				break;
-			case 'Paylike\\Exception\\ApiConnection':
+			case 'Lunar\\Exception\\ApiConnection':
 				$message = LUNAR_ERROR_API_CONNECTION;
 				break;
-			case 'Paylike\\Exception\\ApiException':
+			case 'Lunar\\Exception\\ApiException':
 				$message = LUNAR_ERROR_EXCEPTION;
 				break;
 		}
@@ -479,6 +392,101 @@ class lunar_admin {
 	}
 
 
-}
+	/**
+	 * install lunar payment model
+	 *
+	 * @global type $db
+	 */
+	public function install() {
+		global $db;
 
-?>
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
+		              VALUES ('" . LUNAR_ADMIN_ENABLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_STATUS', 'True', '" . LUNAR_ADMIN_ENABLE_DESCRIPTION . "', '6', '1', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now());" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+					VALUES ('" . LUNAR_ADMIN_APP_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_APP_KEY', '', '" . LUNAR_ADMIN_APP_KEY_DESCRIPTION . "', '6', '2', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+					VALUES ('" . LUNAR_ADMIN_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_PUBLIC_KEY', '', '" . LUNAR_ADMIN_PUBLIC_KEY_DESCRIPTION . "', '6', '3', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+		              VALUES ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '5', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
+		              VALUES ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '6', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\'), ', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+		             VALUES ('" . LUNAR_ADMIN_SHOP_TITLE . "', 'MODULE_PAYMENT_LUNAR_SHOP_TITLE', '" . (defined( 'STORE_NAME' ) ? STORE_NAME : '') . "', '" . LUNAR_ADMIN_SHOP_DESCRIPTION . "', '6', '7', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added)
+		              VALUES ('" . LUNAR_ADMIN_PAYMENT_ZONE_TITLE . "', 'MODULE_PAYMENT_LUNAR_ZONE', '0', '" . LUNAR_ADMIN_PAYMENT_ZONE_DESCRIPTION . "', '6', '8', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+		               VALUES ('" . LUNAR_ADMIN_CAPTURE_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID', '2', '" . LUNAR_ADMIN_CAPTURE_STATUS_DESCRIPTION . "', '6', '9', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+		               VALUES ('" . LUNAR_ADMIN_REFUND_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_REFUND_STATUS_DESCRIPTION . "', '6', '10', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+		               VALUES ('" . LUNAR_ADMIN_CANCEL_STATUS_TITLE . "', 'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID', '4', '" . LUNAR_ADMIN_CANCEL_STATUS_DESCRIPTION . "', '6', '11', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+		               VALUES ('" . LUNAR_ADMIN_SORT_ORDER_TITLE . "', 'MODULE_PAYMENT_LUNAR_SORT_ORDER', '0', '" . LUNAR_ADMIN_SORT_ORDER_DESCRIPTION . "', '6', '12', now())" );
+	}
+
+	/**
+	 * remove module
+	 *
+	 * @global type $db
+	 */
+	public function remove() {
+		global $db;
+		$db->Execute( "delete from " . TABLE_CONFIGURATION . " where configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_%'" );
+	}
+
+	/**
+	 * install lunar payment model
+	 *
+	 */
+	public function create_table_lunar() {
+		global $db;
+		$db->Execute( "CREATE TABLE IF NOT EXISTS lunar_transaction (
+			id INT NOT NULL AUTO_INCREMENT, 
+			customer_id INT NOT NULL DEFAULT 0, 
+			order_id INT NOT NULL DEFAULT 0,
+			authorization_type VARCHAR(50) NOT NULL, 
+			transaction_status ENUM('authorize', 'capture', 'partial_refund', 'refund', 'void') DEFAULT 'authorize',
+			transaction_id VARCHAR(100) NOT NULL, time VARCHAR(50) NOT NULL, 
+			session_id VARCHAR(255) NOT NULL, PRIMARY KEY (id) );" 
+		);
+	}
+
+	/**
+	 * keys
+	 *
+	 * @return array
+	 */
+	public function keys() {
+		return array(
+			'MODULE_PAYMENT_LUNAR_STATUS',
+			'MODULE_PAYMENT_LUNAR_APP_KEY',
+			'MODULE_PAYMENT_LUNAR_PUBLIC_KEY',
+			'MODULE_PAYMENT_LUNAR_TEXT_TITLE',
+			'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION',
+			'MODULE_PAYMENT_LUNAR_SHOP_TITLE',
+			'MODULE_PAYMENT_LUNAR_CAPTURE_MODE',
+			'MODULE_PAYMENT_LUNAR_ACCEPTED_CARDS',
+			'MODULE_PAYMENT_LUNAR_ZONE',
+			'MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID',
+			'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID',
+			'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID',
+			'MODULE_PAYMENT_LUNAR_SORT_ORDER'
+		);
+	}
+
+
+}

@@ -14,16 +14,13 @@ require_once( __DIR__ . '/lunar/lunar_currencies.php' );
 class lunar extends base {
 
 	const LUNAR_MODULE_VERSION = '1.0.0';
-	var $app_id, $code, $title, $description, $sort_order, $enabled, $form_action_url;
-
+	var $code, $title, $description, $sort_order, $enabled, $form_action_url;
+	
 	/**
 	 * constructor
 	 */
 	function __construct() {
 		global $order;
-
-		// init api client
-		$this->app_id = MODULE_PAYMENT_LUNAR_APP_KEY;
 
 		$this->enabled         = defined( 'MODULE_PAYMENT_LUNAR_STATUS' ) && MODULE_PAYMENT_LUNAR_STATUS == 'True'; // Whether the module is installed or not
 		$this->code            = 'lunar';
@@ -213,7 +210,7 @@ class lunar extends base {
 		}
 		// transaction history
 		$lunar_admin = new lunar_admin();
-		$response      = $lunar_admin->getTransactionHistory( $this->app_id, $_POST['txn_no'] );
+		$response      = $lunar_admin->getTransactionHistory( $_POST['txn_no'] );
 		if ( ! sizeof( $response ) ) {
 			$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
@@ -256,7 +253,7 @@ class lunar extends base {
 		// payment capture
 		if ( MODULE_PAYMENT_LUNAR_CAPTURE_MODE === 'Instant' ) {
 			$lunar_admin = new lunar_admin();
-			$lunar_admin->capture( $this->app_id, $insert_id, 'Complete', $order->info['total'], $data['currency'], '', true );
+			$lunar_admin->capture( $insert_id, 'Complete', $order->info['total'], $data['currency'], '', true );
 		}
 	}
 
@@ -313,7 +310,7 @@ class lunar extends base {
 			return '';
 		}
 
-		$actions = new lunar_admin_actions( $order_id, $this->app_id );
+		$actions = new lunar_admin_actions( $order_id );
 
 		echo $actions->output();
 	}
@@ -413,7 +410,7 @@ class lunar extends base {
 	function _doCapt( $order_id, $captureType = 'Complete', $amt = 0, $currency = 'USD', $note = '' ) {
 		$lunar_admin = new lunar_admin();
 
-		return $lunar_admin->capture( $this->app_id, $order_id, $captureType, $amt, $currency, $note );
+		return $lunar_admin->capture( $order_id, $captureType, $amt, $currency, $note );
 	}
 
 	/**
@@ -428,7 +425,7 @@ class lunar extends base {
 	function _doRefund( $order_id, $amount = 'Full', $note = '' ) {
 		$lunar_admin = new lunar_admin();
 
-		return $lunar_admin->refund( $this->app_id, $order_id, $amount, $note );
+		return $lunar_admin->refund( $order_id, $amount, $note );
 	}
 
 	/**
@@ -442,7 +439,7 @@ class lunar extends base {
 	function _doVoid( $order_id, $note = '' ) {
 		$lunar_admin = new lunar_admin();
 
-		return $lunar_admin->void( $this->app_id, $order_id, $note );
+		return $lunar_admin->void( $order_id, $note );
 	}
 
 }
