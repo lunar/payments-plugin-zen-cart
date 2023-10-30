@@ -1,6 +1,6 @@
 <?php
-define( 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', 'Lunar Card' );
-define( 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', 'Lunar Card' );
+define( 'MODULE_PAYMENT_LUNAR_ADMIN_TITLE', 'Lunar Card' );
+define( 'MODULE_PAYMENT_LUNAR_ADMIN_DESCRIPTION', 'Receive payments with card via &copy; Lunar' );
 
 
 define( 'LUNAR_TEXT_TXN_ID', 'Transaction ID' );

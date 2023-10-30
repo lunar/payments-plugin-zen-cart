@@ -14,6 +14,8 @@ use Lunar\Payment\helpers\LunarHelper;
  */
 class lunar_card extends base 
 {
+	const METHOD_CODE = 'card';
+
 	/** @see includes/classes/payment.php */
     protected $_check;
     public $code;
@@ -32,10 +34,10 @@ class lunar_card extends base
 	 */
 	public function __construct()
 	{
-		$this->code            = 'lunar_card';
+		$this->code            = LunarHelper::LUNAR_METHODS[self::METHOD_CODE];
 		$this->enabled         = defined( 'MODULE_PAYMENT_LUNAR_STATUS' ) && MODULE_PAYMENT_LUNAR_STATUS == 'True';
-		$this->title           = MODULE_PAYMENT_LUNAR_TEXT_TITLE;
-		$this->description     = MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION; // Descriptive Info about module in Admin
+		$this->title           = MODULE_PAYMENT_LUNAR_TITLE;
+		$this->description     = MODULE_PAYMENT_LUNAR_DESCRIPTION;
 		// $this->form_action_url = '';
 
 		$this->sort_order      = defined( 'MODULE_PAYMENT_LUNAR_SORT_ORDER' ) ? MODULE_PAYMENT_LUNAR_SORT_ORDER : 0; // Sort Order in the checkout page
@@ -48,6 +50,10 @@ class lunar_card extends base
 				$alertHtml   = '<span class="alert"> (' . LUNAR_WARNING_NOT_CONFIGURED . ')</span>';
 				$this->title .= $alertHtml;
 			}
+
+			$this->title = MODULE_PAYMENT_LUNAR_ADMIN_TITLE;
+			$this->description = MODULE_PAYMENT_LUNAR_ADMIN_DESCRIPTION;
+
 		}
 
 		if ( is_object( $this->order ) ) {
@@ -66,9 +72,8 @@ class lunar_card extends base
 	 */
 	public function setArgs()
 	{
-		$locale = ( $_SESSION['languages_code'] ) ? $_SESSION['languages_code'] : 'en_US';
+		// $locale = ( $_SESSION['languages_code'] ) ? $_SESSION['languages_code'] : 'en_US';
 
-		// construct payment payload
 		$this->args = [
 			'integration' => [
                 'key' => MODULE_PAYMENT_LUNAR_PUBLIC_KEY,
@@ -77,7 +82,7 @@ class lunar_card extends base
 			],
 			'amount'     => [
 				'currency' => $this->order->info['currency'],
-				'decimals' => $this->order->info['total'],
+				'decimals' => (string) $this->order->info['total'],
 			],
 			'custom' => [
 				// 'orderId'    => '', // we don't have the order at this time
@@ -97,7 +102,7 @@ class lunar_card extends base
 				],
 				'lunarPluginVersion' => LunarHelper::pluginVersion(),
 			],
-            'redirectUrl' => zen_href_link(FILENAME_CHECKOUT_CONFIRMATION, '', 'SSL'),
+            'redirectUrl' => zen_href_link(FILENAME_CHECKOUT_CONFIRMATION, 'lunar_method=card', 'SSL'),
             'preferredPaymentMethod' => 'card',
         ];
 
@@ -123,6 +128,8 @@ class lunar_card extends base
 	public function update_status()
 	{
 		global $order, $db;
+
+
 
 		if ( $this->enabled && (int) MODULE_PAYMENT_LUNAR_ZONE > 0 && isset( $this->order->delivery['country']['id'] ) ) {
 			$checkFlag = false;
@@ -168,9 +175,10 @@ class lunar_card extends base
 	 */
 	public function selection()
 	{
-		$selection = array( 'id' => $this->code, 'module' => $this->title );
-
-		return $selection;
+		return [
+			'id' => $this->code,
+			'module' => $this->title
+		];
 	}
 
 	/**
@@ -180,6 +188,7 @@ class lunar_card extends base
 	 */
 	public function pre_confirmation_check()
 	{
+
 		global $messageStack;
 		if ( MODULE_PAYMENT_LUNAR_APP_KEY == '' || MODULE_PAYMENT_LUNAR_PUBLIC_KEY == '' ) {
 			$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
@@ -193,6 +202,7 @@ class lunar_card extends base
 	 */
 	public function confirmation()
 	{
+
 		return ['title' => $this->description];
 	}
 
@@ -203,6 +213,7 @@ class lunar_card extends base
 	 */
 	public function process_button()
 	{
+
 		return '';
 		// return '<script type="text/javascript">' . "\n" .
 		// 		'$(window).on("load", function() { ' . "\n" .
@@ -252,7 +263,7 @@ class lunar_card extends base
 		// 	return;
 		// }
 
-		// if ( $response['amount']['decimal'] != $this->order->info['total'] ) {
+		// if ( $response['amount']['decimal'] != (string) $this->order->info['total'] ) {
 		// 	$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
 		// 	zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 
@@ -270,7 +281,7 @@ class lunar_card extends base
 
 		$data = [
 			'transaction_id' => $_POST['txn_no'],
-			'amount'         => $this->order->info['total'],
+			'amount'         => (string) $this->order->info['total'],
 			'currency'       => $this->order->info['currency'],
 		];
 
@@ -292,8 +303,7 @@ class lunar_card extends base
 	 * @param $data
 	 * @param $order_id
 	 */
-	public function update_order_history( $data, $order_id
-	)
+	public function update_order_history( $data, $order_id )
 	{
 		// TABLE_ORDERS_STATUS_HISTORY
 		$comments = LUNAR_COMMENT_AUTHORIZE . $data['transaction_id'] . "\n" . LUNAR_COMMENT_AMOUNT . $this->order->info['total'];

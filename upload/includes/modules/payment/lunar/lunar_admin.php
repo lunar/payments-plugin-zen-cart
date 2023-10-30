@@ -165,7 +165,7 @@ class lunar_admin
 		try {
 			//@TODO: Read current order status and determine best status to set this to
 			$refundAmount    = $amount;
-			$orderAmount     = $order->info['total'];
+			$orderAmount     = (string) $order->info['total'];
 			$isPartialRefund = false;
 
 			// new status
@@ -231,7 +231,7 @@ class lunar_admin
 			$new_order_status = ( $new_order_status > 0 ? $new_order_status : 4 );
 
 			$lunar_void   = $this->apiClient->payments()->void( $transaction_ID, array(
-				'amount' => $order->info['total']
+				'amount' => (string) $order->info['total']
 			) );
 
 			if ( $lunar_void['successful'] ) {
@@ -418,13 +418,13 @@ class lunar_admin
 		              VALUES ('" . LUNAR_ADMIN_LOGO_URL_TITLE . "', 'MODULE_PAYMENT_LUNAR_LOGO_URL', '', '" . LUNAR_ADMIN_METHOD_LOGO_URL_DESCRIPTION . "', '6', '4', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
+		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
-		              VALUES ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '5', now())" );
+		              VALUES ('" . LUNAR_ADMIN_METHOD_DESCRIPTION_TITLE . "', 'MODULE_PAYMENT_LUNAR_DESCRIPTION', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE . "', '" . LUNAR_ADMIN_METHOD_DESCRIPTION_DESCRIPTION . "', '6', '5', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
-		              VALUES ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '6', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\'), ', now())" );
+		              VALUES ('" . LUNAR_ADMIN_CAPTURE_MODE_TITLE . "', 'MODULE_PAYMENT_LUNAR_CAPTURE_MODE', '" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "', '" . LUNAR_ADMIN_CAPTURE_MODE_DESCRIPTION . "', '6', '6', 'zen_cfg_select_option(array(\'" . LUNAR_ADMIN_CAPTURE_MODE_DELAYED . "\', \'" . LUNAR_ADMIN_CAPTURE_MODE_INSTANT . "\'), ', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
 		             VALUES ('" . LUNAR_ADMIN_SHOP_TITLE . "', 'MODULE_PAYMENT_LUNAR_SHOP_TITLE', '" . (defined( 'STORE_NAME' ) ? STORE_NAME : '') . "', '" . LUNAR_ADMIN_SHOP_DESCRIPTION . "', '6', '7', now())" );
@@ -485,8 +485,8 @@ class lunar_admin
 			'MODULE_PAYMENT_LUNAR_APP_KEY',
 			'MODULE_PAYMENT_LUNAR_PUBLIC_KEY',
 			'MODULE_PAYMENT_LUNAR_LOGO_URL',
-			'MODULE_PAYMENT_LUNAR_TEXT_TITLE',
-			'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION',
+			'MODULE_PAYMENT_LUNAR_TITLE',
+			'MODULE_PAYMENT_LUNAR_DESCRIPTION',
 			'MODULE_PAYMENT_LUNAR_SHOP_TITLE',
 			'MODULE_PAYMENT_LUNAR_CAPTURE_MODE',
 			'MODULE_PAYMENT_LUNAR_ACCEPTED_CARDS',
