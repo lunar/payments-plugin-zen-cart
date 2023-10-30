@@ -16,8 +16,11 @@ class lunar_card extends base
 {
 	const METHOD_CODE = 'card';
 
+	const REMOTE_URL = 'https://pay.lunar.money/?id=';
+    const TEST_REMOTE_URL = 'https://hosted-checkout-git-develop-lunar-app.vercel.app/?id=';
+
 	/** @see includes/classes/payment.php */
-    protected $_check;
+    public $_check;
     public $code;
     public $description;
     public $enabled;
@@ -25,9 +28,12 @@ class lunar_card extends base
 	public $form_action_url;
 	public $sort_order;
 	
-	public $args;
 	public $order;
+	public array $args;
+
 	private bool $testMode = false;
+	private bool $isInstantMode = false;
+	private $lunar_admin;
 	
 	/**
 	 * constructor
@@ -44,6 +50,9 @@ class lunar_card extends base
 
 		$this->order =  $GLOBALS['order'];
 		$this->testMode = !!$_COOKIE['lunar_testmode'];
+		$this->isInstantMode = MODULE_PAYMENT_LUNAR_CAPTURE_MODE === 'Instant';
+
+		$this->lunar_admin = new lunar_admin();
 
 		if ( IS_ADMIN_FLAG === true ) {
 			if ( MODULE_PAYMENT_LUNAR_APP_KEY == '' || MODULE_PAYMENT_LUNAR_PUBLIC_KEY == '' ) {
@@ -72,7 +81,7 @@ class lunar_card extends base
 	 */
 	public function setArgs()
 	{
-		// $locale = ( $_SESSION['languages_code'] ) ? $_SESSION['languages_code'] : 'en_US';
+		$this->order = $GLOBALS['order'];
 
 		$this->args = [
 			'integration' => [
@@ -82,7 +91,7 @@ class lunar_card extends base
 			],
 			'amount'     => [
 				'currency' => $this->order->info['currency'],
-				'decimals' => (string) $this->order->info['total'],
+				'decimal' => (string) $this->order->info['total'],
 			],
 			'custom' => [
 				// 'orderId'    => '', // we don't have the order at this time
@@ -102,7 +111,7 @@ class lunar_card extends base
 				],
 				'lunarPluginVersion' => LunarHelper::pluginVersion(),
 			],
-            'redirectUrl' => zen_href_link(FILENAME_CHECKOUT_CONFIRMATION, 'lunar_method=card', 'SSL'),
+            'redirectUrl' => str_replace('&amp;', '&', zen_href_link(FILENAME_CHECKOUT_PROCESS, 'lunar_method=card', 'SSL')),
             'preferredPaymentMethod' => 'card',
         ];
 
@@ -245,23 +254,27 @@ class lunar_card extends base
 	 */
 	public function before_process()
 	{
-		global $messageStack, $currencies;
+		if (isset($_GET['lunar_method'])) {
+			return;
+		}
 
-		// if ( empty($_POST['txn_no']) ) {
-		// 	$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISSING . ' <!-- [' . $this->code . '] -->', 'error' );
-		// 	zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
+		$this->setArgs();
 
-		// 	return;
-		// }
-		// transaction history
-		// $lunar_admin = new lunar_admin();
-		// $response    = $lunar_admin->getTransactionHistory( $_POST['txn_no'] );
-		// if ( !$response ) {
-		// 	$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
-		// 	zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
+		$paymentIntentId = $this->lunar_admin->getPaymentIntentCookie();
+		if (!$paymentIntentId) {
+			$paymentIntentId = $this->lunar_admin->createPaymentIntent($this->args);
+		}
 
-		// 	return;
-		// }
+		if ( !$paymentIntentId ) {
+			setcookie(LunarHelper::INTENT_KEY); // clear any stored intent cookie
+			$this->redirectToCheckoutPage();
+			return;
+		}
+
+		$this->lunar_admin->savePaymentIntentCookie($paymentIntentId);
+
+		zen_redirect(($this->testMode ? self::TEST_REMOTE_URL : self::REMOTE_URL) . $paymentIntentId);
+
 
 		// if ( $response['amount']['decimal'] != (string) $this->order->info['total'] ) {
 		// 	$messageStack->add_session( 'checkout_payment', LUNAR_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH . ' <!-- [' . $this->code . '] -->', 'error' );
@@ -277,25 +290,28 @@ class lunar_card extends base
 	 */
 	public function after_process()
 	{
-		global $insert_id;
+		global $order, $insert_id;
+
+		$paymentMethod = $_GET['lunar_method'] ?? '';
+		if (!$paymentMethod) {
+			return;
+		}
 
 		$data = [
-			'transaction_id' => $_POST['txn_no'],
-			'amount'         => (string) $this->order->info['total'],
-			'currency'       => $this->order->info['currency'],
+			'transaction_id' => $this->lunar_admin->getPaymentIntentCookie(),
+			'amount'         => (string) $order->info['total'],
+			'currency'       => $order->info['currency'],
 		];
 
-		$this->update_transaction_records( $data, $insert_id );
+		$this->insert_lunar_transaction( $data, $insert_id );
 
 		$this->update_order_history( $data, $insert_id );
 
-		// update order status
 		zen_db_perform( TABLE_ORDERS, array( 'orders_status' => (int) MODULE_PAYMENT_LUNAR_AUTHORIZE_ORDER_STATUS_ID ), 'update', 'orders_id = "' . (int) $insert_id . '"' );
 
 		// payment capture
-		if ( MODULE_PAYMENT_LUNAR_CAPTURE_MODE === 'Instant' ) {
-			$lunar_admin = new lunar_admin();
-			$lunar_admin->capture( $insert_id, 'Complete', $this->order->info['total'], $data['currency'], '', true );
+		if ($this->isInstantMode) {
+			$this->lunar_admin->capture( $insert_id, $data, true );
 		}
 	}
 
@@ -306,32 +322,47 @@ class lunar_card extends base
 	public function update_order_history( $data, $order_id )
 	{
 		// TABLE_ORDERS_STATUS_HISTORY
-		$comments = LUNAR_COMMENT_AUTHORIZE . $data['transaction_id'] . "\n" . LUNAR_COMMENT_AMOUNT . $this->order->info['total'];
-		$sql1     = [
+		$comments = LUNAR_COMMENT_AUTHORIZE . $data['transaction_id'] . "\n" . LUNAR_COMMENT_AMOUNT . $data['amount'];
+		$data     = [
 			'comments'          => $comments,
 			'orders_id'         => (int) $order_id,
 			'orders_status_id'  => (int) MODULE_PAYMENT_LUNAR_AUTHORIZE_ORDER_STATUS_ID,
 			'customer_notified' => - 1,
-			'date_added'        => $data['time'],
-			'updated_by'         => 'system'
+			'date_added'        => date('Y-m-d H:i:s'),
+			'updated_by'        => 'system'
 		];
-		zen_db_perform( TABLE_ORDERS_STATUS_HISTORY, $sql1 );
+		zen_db_perform( TABLE_ORDERS_STATUS_HISTORY, $data );
+	}
+
+	/**
+	 *
+	 */
+	public function redirectToCheckoutPage()
+	{
+		global $messageStack;
+
+		$messageStack->add_session( FILENAME_CHECKOUT_CONFIRMATION, 
+			LUNAR_ERROR_INVALID_REQUEST . ' <!-- [' . $this->code . '] -->', 'error' 
+		);
+		zen_redirect( zen_href_link( FILENAME_CHECKOUT_CONFIRMATION, '', 'SSL', true, false ) );
 	}
 
 	/**
 	 * @param $data
 	 * @param $order_id
 	 */
-	public function update_transaction_records( $data, $order_id )
+	public function insert_lunar_transaction( $data, $order_id )
 	{
 		$data = [
 			'order_id'           => (int) $order_id,
 			'transaction_id'     => $data['transaction_id'],
 			'transaction_type'   => 'authorize',
-			'time'               => date( "Y-m-d h:i:s" ),
-			'method_code' 		 => 'lunar_card',
+			'order_amount'       => $data['amount'],
+			'transaction_amount' => $data['amount'],
+			'method_code' 		 => self::METHOD_CODE,
+			'created_at'         => date( "Y-m-d h:i:s" ),
 		];
-		zen_db_perform( 'lunar', $data );
+		zen_db_perform( LunarHelper::LUNAR_DB_TABLE, $data );
 	}
 
 	/**
@@ -385,7 +416,7 @@ class lunar_card extends base
 	}
 
 	/**
-	 * Check and fix table 'lunar'
+	 * Check and fix custom table
 	 */
 	public function tableCheckup()
 	{
@@ -393,7 +424,7 @@ class lunar_card extends base
 		$tableOkay = ( method_exists( $sniffer, 'table_exists' ) ) ? $sniffer->table_exists( LunarHelper::LUNAR_DB_TABLE ) : false;
 		if ( $tableOkay !== true ) {
 			$lunar_admin = new lunar_admin();
-			$lunar_admin->create_transactions_table();
+			$this->lunar_admin->create_transactions_table();
 		}
 	}
 
@@ -405,7 +436,7 @@ class lunar_card extends base
 	public function install()
 	{
 		$lunar_admin = new lunar_admin();
-		$lunar_admin->install();
+		$this->lunar_admin->install();
 	}
 
 	/**
@@ -416,7 +447,7 @@ class lunar_card extends base
 	public function remove()
 	{
 		$lunar_admin = new lunar_admin();
-		$lunar_admin->remove();
+		$this->lunar_admin->remove();
 	}
 
 	/**
@@ -428,7 +459,7 @@ class lunar_card extends base
 	{
 		$lunar_admin = new lunar_admin();
 
-		return $lunar_admin->keys();
+		return $this->lunar_admin->keys();
 	}
 
 	/**
@@ -454,11 +485,13 @@ class lunar_card extends base
 	 *
 	 * @return bool
 	 */
-	public function _doCapt( $order_id, $captureType = 'Complete', $amt = 0, $currency = 'USD', $note = '' )
+	public function _doCapt( $order_id, $status = '', $amount, $currency)
 	{
-		$lunar_admin = new lunar_admin();
-
-		return $lunar_admin->capture( $order_id, $captureType, $amt, $currency, $note );
+		$data = [
+			'amount' => (string) $amount,
+			'currency' => $currency,
+		];
+		return $this->lunar_admin->capture($order_id, $data);
 	}
 
 	/**
@@ -472,9 +505,7 @@ class lunar_card extends base
 	 */
 	public function _doRefund( $order_id, $amount = 'Full', $note = '' )
 	{
-		$lunar_admin = new lunar_admin();
-
-		return $lunar_admin->refund( $order_id, $amount, $note );
+		return $this->lunar_admin->refund( $order_id, $amount, $note );
 	}
 
 	/**
@@ -487,9 +518,7 @@ class lunar_card extends base
 	 */
 	public function _doVoid( $order_id, $note = '' )
 	{
-		$lunar_admin = new lunar_admin();
-
-		return $lunar_admin->void( $order_id, $note );
+		return $this->lunar_admin->void( $order_id, $note );
 	}
 
     /**

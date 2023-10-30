@@ -17,6 +17,16 @@ class LunarHelper
     const LUNAR_MOBILEPAY_CODE = 'mobilePay';
     const LUNAR_MOBILEPAY_CONFIG_CODE = 'MODULE_PAYMENT_LUNAR_MOBILEPAY_';
 
+    const INTENT_KEY = '_lunar_intent_id'; 
+
+    const PAYMENT_TYPES = [
+        'authorize'      => LUNAR_STATUS_AUTHORIZED,
+        'capture'        => LUNAR_STATUS_CAPTURED,
+        'partial_refund' => LUNAR_STATUS_PARTIALLY_REFUNDED,
+        'refund'         => LUNAR_STATUS_REFUNDED,
+        'void'           => LUNAR_STATUS_CANCELLED
+    ];
+
     public static function pluginVersion()
     {
         return json_decode(file_get_contents(dirname(__DIR__) . '/composer.json'))->version;

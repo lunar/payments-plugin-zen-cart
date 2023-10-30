@@ -1,14 +1,14 @@
 <?php
-/**
- *  Zencart Admin Configuration
- *  Copyright (c) 2022 Lunar
- */
 
+use Lunar\Payment\helpers\LunarHelper;
+
+/**
+ * 
+ */
 class lunar_admin_actions {
 
 	public $output;
 	public $order_id;
-	public $app_id;
 	public $fields;
 	public $capture_total;
 	public $refund_total;
@@ -16,14 +16,11 @@ class lunar_admin_actions {
 	public $amount_total;
 
 	/**
-	 * lunar_admin_actions constructor.
-	 *
+	 * constructor
 	 * @param $order_id
-	 * @param $app_id
 	 */
-	public function __construct( $order_id, $app_id ) {
+	public function __construct( $order_id ) {
 		$this->order_id = $order_id;
-		$this->app_id   = $app_id;
 		$this->set_transaction_history()->set_totals();
 	}
 
@@ -38,14 +35,14 @@ class lunar_admin_actions {
 
 
 		// prepare output based on suitable content components
-		$output = '<!-- BOF: pl admin transaction processing tools -->';
+		$output = '<!-- BOF: lunar admin transaction processing tools -->';
 		$output .= $this->get_start_block();
 		$output .= $this->get_table();
 		$output .= $this->get_end_block();
 		$output .= $this->get_capture_form();
 		$output .= $this->get_refund_form();
 		$output .= $this->get_void_form();
-		$output .= '<!-- EOF: pl admin transaction processing tools -->';
+		$output .= '<!-- EOF: lunar admin transaction processing tools -->';
 
 
 		return $output;
@@ -121,15 +118,8 @@ class lunar_admin_actions {
 	/**
 	 * @return string
 	 */
-	private function get_table() {
-		$payment_status = [
-			'authorize'      => LUNAR_STATUS_AUTHORIZED,
-			'capture'        => LUNAR_STATUS_CAPTURED,
-			'partial_refund' => LUNAR_STATUS_PARTIALLY_REFUNDED,
-			'refund'         => LUNAR_STATUS_REFUNDED,
-			'void'           => LUNAR_STATUS_CANCELLED
-		];
-
+	private function get_table()
+	{
 		$table = '<tr class="dataTableHeadingRow">' . "\n";
 		$table .= '<th class="dataTableHeadingContent">' . LUNAR_TEXT_TXN_ID . '</th>' . "\n";
 		$table .= '<th class="dataTableHeadingContent">' . LUNAR_TEXT_PAYMENT_STATUS . '</th>' . "\n";
@@ -139,7 +129,7 @@ class lunar_admin_actions {
 		// values
 		$table .= '<tr class="dataTableRow">' . "\n";
 		$table .= '<td class="dataTableContent">' . $this->fields['transaction_id'] . '</td>' . "\n";
-		$table .= '<td class="dataTableContent">' . $payment_status[ $this->fields['transaction_status'] ] . '</td>' . "\n";
+		$table .= '<td class="dataTableContent">' . LunarHelper::PAYMENT_TYPES[ $this->fields['transaction_type'] ] . '</td>' . "\n";
 		$table .= '<td class="dataTableContent">' . $this->fields['time'] . '</td>' . "\n";
 		$table .= '<td class="dataTableContent">' . $this->get_buttons_list() . '</td>' . "\n";
 		$table .= '</tr>' . "\n";
@@ -150,7 +140,8 @@ class lunar_admin_actions {
 	/**
 	 * @return string
 	 */
-	private function get_buttons_list() {
+	private function get_buttons_list()
+	{
 		$buttons_list   = '';
 		$capture_button = '<a href="javascript:void(0)" id="capture_click" title="'.LUNAR_CAPTURE_BUTTON_TEXT_FULL.'" style="padding-right:10px;"><i class="fa fa-check-circle" style="margin-right:5px;" aria-hidden="true"></i>'.LUNAR_CAPTURE_BUTTON_TEXT_FULL.'</a>';
 		$refund_button  = '<a href="javascript:void(0)" id="refund_click" title="'.LUNAR_REFUND_BUTTON_TEXT.'" style="padding-right:10px;"><i class="fa fa-reply-all" style="margin-right:5px;" aria-hidden="true"></i>'.LUNAR_REFUND_BUTTON_TEXT.'</a>';
@@ -219,7 +210,7 @@ class lunar_admin_actions {
 	 */
 	private function set_transaction_history() {
 		global $db;
-		$sql     = "select * from lunar where order_id = '" . (int) $this->order_id . "'";
+		$sql     = "SELECT * FROM " . LunarHelper::LUNAR_DB_TABLE . " WHERE order_id = '" . (int) $this->order_id . "'";
 		$history = $db->Execute( $sql );
 
 		if ( !$history->RecordCount() > 0 ) {

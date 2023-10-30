@@ -114,7 +114,7 @@ define( 'LUNAR_WARNING_NOT_CONFIGURED_FRONTEND', 'Lunar module is not configured
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_MISSING', 'The transaction id is missing, it seems that the authorization failed or the reference was not sent. Please try the payment again. The previous payment will not be captured.' );
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_MISMATCH', 'The transaction id couldn\'t be found, please contact the store owner, there may be a mismatch in configuration.' );
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH', 'The transaction amount is incorrect, please contact the store owner, there may be a mismatch in configuration.' );
-define( 'LUNAR_ORDER_ERROR_TRANSACTION_FAILURE', 'There is no history stored for this order, there has been an error during the transaction. Check the Lunar log files.' );
+define( 'LUNAR_ORDER_ERROR_TRANSACTION_FAILURE', 'There is no transaction stored for this order or there has been an error during transaction. Check the Lunar log files.' );
 
 
 // PAYMENT STATUSES
