@@ -1,8 +1,6 @@
 <?php
-define( 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', 'Lunar' );
-define( 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', 'Lunar' );
-
-define( 'TABLE_LUNAR', 'lunar' );
+define( 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', 'Lunar Card' );
+define( 'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION', 'Lunar Card' );
 
 
 define( 'LUNAR_TEXT_TXN_ID', 'Transaction ID' );
@@ -49,6 +47,9 @@ define( 'LUNAR_ADMIN_APP_KEY_DESCRIPTION', 'Get it from your Lunar dashboard' );
 
 define( 'LUNAR_ADMIN_PUBLIC_KEY_TITLE', 'Public Key' );
 define( 'LUNAR_ADMIN_PUBLIC_KEY_DESCRIPTION', 'Get it from your Lunar dashboard' );
+
+define( 'LUNAR_ADMIN_LOGO_URL_TITLE', 'Logo URL' );
+define( 'LUNAR_ADMIN_METHOD_LOGO_URL_DESCRIPTION', 'Must be a link begins with "https://" to a JPG,JPEG or PNG file' );
 
 define( 'LUNAR_ADMIN_CAPTURE_MODE_TITLE', 'Capture mode' );
 define( 'LUNAR_ADMIN_CAPTURE_MODE_INSTANT', 'Instant' );

@@ -1,16 +1,24 @@
 <?php
-/**
- *  Zencart Admin Configuration
- *  Copyright (c) 2022 Lunar
- */
 
-class lunar_admin {
+
+use Lunar\Lunar as ApiClient;
+use Lunar\Payment\helpers\LunarHelper;
+
+/**
+ *
+ */
+class lunar_admin
+{
+    private ApiClient $apiClient;
+	protected $paymentMethod = null;
+    // protected string $intentIdKey = '_lunar_intent_id';
 
 	/**
 	 * constructor
 	 */
-	function __construct() {
-		$this->apiClient = new Lunar(MODULE_PAYMENT_LUNAR_APP_KEY, null, !!$_COOKIE['lunar_testmode']);
+	public function __construct()
+	{
+		$this->apiClient = new ApiClient(MODULE_PAYMENT_LUNAR_APP_KEY, null, !!$_COOKIE['lunar_testmode']);
 	}
 
 
@@ -22,9 +30,10 @@ class lunar_admin {
 	 *
 	 * @return array
 	 */
-	public function getTransactionHistory( $transaction_id ) {
+	public function getTransactionHistory( $transaction_id )
+	{
 		try {
-			$lunar_history = $this->apiClient->transactions()->fetch( $transaction_id );
+			$lunar_history = $this->apiClient->payments()->fetch( $transaction_id );
 			if ( $lunar_history['successful'] ) {
 				return $lunar_history;
 			}
@@ -54,10 +63,9 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function capture( $order_id, $captureType, $amount, $currency, $note, $silent = false ) {
+	public function capture( $order_id, $captureType, $amount, $currency, $note, $silent = false )
+	{
 		global $db, $messageStack, $order, $currencies;
-		/** Convert amount to order currency */
-		$amount_converted = $currencies->value($amount, true, $order->info['currency'], $order->info['currency_value']);
 
 		if ( $amount <= 0 ) {
 			$error = '<!-- Amount is null or empty. Order: ' . $order_id . ' -->';
@@ -76,13 +84,11 @@ class lunar_admin {
 			$new_order_status = (int) MODULE_PAYMENT_LUNAR_CAPTURE_ORDER_STATUS_ID;
 			$new_order_status = ( $new_order_status > 0 ? $new_order_status : 2 );
 
-			// amount convert based on currency
-			$captureAmount = cf_lunar_amount( $amount_converted, $currency );
-
-			$lunar_capture = $this->apiClient->transactions()->capture( $transaction_ID, array(
-				'amount'   => $captureAmount,
+			$lunar_capture = $this->apiClient->payments()->capture( $transaction_ID, array(
+				'amount'   => $amount,
 				'currency' => $currency
 			) );
+
 			if ( $lunar_capture['successful'] ) {
 				// update status in lunar
 				zen_db_perform( 'lunar', array( 'transaction_status' => 'capture' ), 'update', 'transaction_id = "' . $lunar_capture['id'] . '"' );
@@ -131,10 +137,9 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function refund( $order_id, $amount, $note ) {
+	public function refund( $order_id, $amount, $note )
+	{
 		global $db, $messageStack, $order, $currencies;
-		/** Convert amount to order currency */
-		$order_total_converted = $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']);
 
 		$transaction_ID = $this->get_transaction_id_from_order( $order_id );
 		if ( ! $transaction_ID ) {
@@ -159,8 +164,8 @@ class lunar_admin {
 
 		try {
 			//@TODO: Read current order status and determine best status to set this to
-			$refundAmount    = cf_lunar_amount( $amount, $currency );
-			$orderAmount     = cf_lunar_amount( $order_total_converted, $currency );
+			$refundAmount    = $amount;
+			$orderAmount     = $order->info['total'];
 			$isPartialRefund = false;
 
 			// new status
@@ -172,7 +177,7 @@ class lunar_admin {
 				$new_order_status = (int) $order->info['orders_status'];
 			}
 
-			$lunar_refund = $this->apiClient->transactions()->refund( $transaction_ID, array(
+			$lunar_refund = $this->apiClient->payments()->refund( $transaction_ID, array(
 				'amount' => $refundAmount
 			) );
 			if ( $lunar_refund['successful'] ) {
@@ -211,10 +216,9 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	function void( $order_id, $note ) {
+	public function void( $order_id, $note )
+	{
 		global $db, $messageStack, $order, $currencies;
-		/** Convert amount to order currency */
-		$order_total_converted = $currencies->value($order->info['total'], true, $order->info['currency'], $order->info['currency_value']);
 
 		$transaction_ID = $this->get_transaction_id_from_order( $order_id );
 		if ( ! $transaction_ID ) {
@@ -226,20 +230,15 @@ class lunar_admin {
 			$new_order_status = (int) MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID;
 			$new_order_status = ( $new_order_status > 0 ? $new_order_status : 4 );
 
-			// force conversion to supported currencies: USD, GBP, CAD, EUR, AUD, NZD
-			$currency = $order->info['currency'];
-			// amount convert based on currency
-			$voidAmt = cf_lunar_amount( $order_total_converted, $currency );
-
-			$lunar_void   = $this->apiClient->transactions()->void( $transaction_ID, array(
-				'amount' => $voidAmt
+			$lunar_void   = $this->apiClient->payments()->void( $transaction_ID, array(
+				'amount' => $order->info['total']
 			) );
 
 			if ( $lunar_void['successful'] ) {
 				// update status in lunar
 				zen_db_perform( 'lunar', array( 'transaction_status' => 'void' ), 'update', 'transaction_id = "' . $lunar_void['id'] . '"' );
 				// update orders_status_history
-				$comments = LUNAR_COMMENT_VOID . $lunar_void['id'] . "\n" . LUNAR_COMMENT_AMOUNT . number_format( (float) $order_total_converted, 2, '.', '' ) . ' ' . $currency;
+				$comments = LUNAR_COMMENT_VOID . $lunar_void['id'] . "\n" . LUNAR_COMMENT_AMOUNT . $order->info['total'] . ' ' . $order->info['currency'];
 				$this->update_order_history( $comments, $new_order_status, $order_id );
 				// success message
 				$success = LUNAR_COMMENT_VOID_SUCCESS . $order_id;
@@ -266,7 +265,8 @@ class lunar_admin {
 	 * @param $new_order_status
 	 * @param $order_id
 	 */
-	function update_order_history( $comments, $new_order_status, $order_id ) {
+	public function update_order_history( $comments, $new_order_status, $order_id )
+	{
 		// TABLE_ORDERS_STATUS_HISTORY
 		$updated_by = function_exists( 'zen_get_admin_name' ) ? zen_get_admin_name( $_SESSION['admin_id'] ) : 'system';
 		$sql1       = [
@@ -288,7 +288,8 @@ class lunar_admin {
 	 *
 	 * @return bool
 	 */
-	public function get_transaction_id_from_order( $order_id ) {
+	public function get_transaction_id_from_order( $order_id )
+	{
 		global $db, $messageStack;
 
 		// look up history on this order from lunar table
@@ -320,7 +321,8 @@ class lunar_admin {
 	 *
 	 * @return bool|string
 	 */
-	public function recordError( $exception, $line = 0, $file = '', $messageStack = null, $context = '' ) {
+	public function recordError( $exception, $line = 0, $file = '', $messageStack = null, $context = '' )
+	{
 		if ( ! $exception ) {
 			return false;
 		}
@@ -373,7 +375,8 @@ class lunar_admin {
 	 *
 	 * @return string
 	 */
-	public function get_response_error( $result ) {
+	public function get_response_error( $result )
+	{
 		$error = array();
 		// if this is just one error
 		if ( isset( $result['text'] ) ) {
@@ -397,7 +400,8 @@ class lunar_admin {
 	 *
 	 * @global type $db
 	 */
-	public function install() {
+	public function install()
+	{
 		global $db;
 
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
@@ -409,6 +413,9 @@ class lunar_admin {
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 					" (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
 					VALUES ('" . LUNAR_ADMIN_PUBLIC_KEY_TITLE . "', 'MODULE_PAYMENT_LUNAR_PUBLIC_KEY', '', '" . LUNAR_ADMIN_PUBLIC_KEY_DESCRIPTION . "', '6', '3', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
+		              VALUES ('" . LUNAR_ADMIN_LOGO_URL_TITLE . "', 'MODULE_PAYMENT_LUNAR_LOGO_URL', '', '" . LUNAR_ADMIN_METHOD_LOGO_URL_DESCRIPTION . "', '6', '4', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added)
 		              VALUES ('" . LUNAR_ADMIN_METHOD_TITLE_TITLE . "', 'MODULE_PAYMENT_LUNAR_TEXT_TITLE', '" . LUNAR_ADMIN_METHOD_TITLE_VALUE . "', '" . LUNAR_ADMIN_METHOD_TITLE_DESCRIPTION . "', '6', '4', now())" );
@@ -443,38 +450,41 @@ class lunar_admin {
 	 *
 	 * @global type $db
 	 */
-	public function remove() {
+	public function remove()
+	{
 		global $db;
-		$db->Execute( "delete from " . TABLE_CONFIGURATION . " where configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_%'" );
+		$db->Execute( "DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_%'" );
 	}
 
 	/**
-	 * install lunar payment model
-	 *
+	 * 
 	 */
-	public function create_table_lunar() {
+	public function create_transactions_table()
+	{
 		global $db;
-		$db->Execute( "CREATE TABLE IF NOT EXISTS lunar_transaction (
-			id INT NOT NULL AUTO_INCREMENT, 
-			customer_id INT NOT NULL DEFAULT 0, 
-			order_id INT NOT NULL DEFAULT 0,
-			authorization_type VARCHAR(50) NOT NULL, 
-			transaction_status ENUM('authorize', 'capture', 'partial_refund', 'refund', 'void') DEFAULT 'authorize',
-			transaction_id VARCHAR(100) NOT NULL, time VARCHAR(50) NOT NULL, 
-			session_id VARCHAR(255) NOT NULL, PRIMARY KEY (id) );" 
+		$db->Execute( "CREATE TABLE IF NOT EXISTS `" . LunarHelper::LUNAR_DB_TABLE . "` (
+			id INT NOT NULL AUTO_INCREMENT,
+			order_id INT NOT NULL,
+			transaction_id VARCHAR(100) NOT NULL,
+			order_amount VARCHAR(50) NOT NULL,
+			transaction_amount VARCHAR(50) NOT NULL,
+			transaction_type ENUM('authorize', 'capture', 'partial_refund', 'refund', 'void') NOT NULL,
+			method_code VARCHAR(50) NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id) );"
 		);
 	}
 
 	/**
-	 * keys
-	 *
 	 * @return array
 	 */
-	public function keys() {
-		return array(
+	public function keys()
+	{
+		return [
 			'MODULE_PAYMENT_LUNAR_STATUS',
 			'MODULE_PAYMENT_LUNAR_APP_KEY',
 			'MODULE_PAYMENT_LUNAR_PUBLIC_KEY',
+			'MODULE_PAYMENT_LUNAR_LOGO_URL',
 			'MODULE_PAYMENT_LUNAR_TEXT_TITLE',
 			'MODULE_PAYMENT_LUNAR_TEXT_DESCRIPTION',
 			'MODULE_PAYMENT_LUNAR_SHOP_TITLE',
@@ -485,7 +495,7 @@ class lunar_admin {
 			'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID',
 			'MODULE_PAYMENT_LUNAR_VOID_ORDER_STATUS_ID',
 			'MODULE_PAYMENT_LUNAR_SORT_ORDER'
-		);
+		];
 	}
 
 

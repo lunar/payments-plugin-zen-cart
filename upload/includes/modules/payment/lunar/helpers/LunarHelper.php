@@ -4,7 +4,7 @@ namespace Lunar\Payment\helpers;
 
 class LunarHelper
 {
-    const LUNAR_DB_TABLE = DB_PREFIX . 'lunar_transaction';
+    const LUNAR_DB_TABLE = DB_PREFIX . 'lunar_transactions';
 
     const LUNAR_METHODS = [
         'card' => 'lunar_card',
@@ -12,10 +12,10 @@ class LunarHelper
     ];
 
     const LUNAR_CARD_CODE = 'card';
-    const LUNAR_CARD_CONFIG_CODE = 'MODULE_PAYMENT_' . self::LUNAR_METHODS[self::LUNAR_CARD_CODE];
+    const LUNAR_CARD_CONFIG_CODE = 'MODULE_PAYMENT_LUNAR_CARD_';
 
     const LUNAR_MOBILEPAY_CODE = 'mobilePay';
-    const LUNAR_MOBILEPAY_CONFIG_CODE = 'MODULE_PAYMENT_' . self::LUNAR_METHODS[self::LUNAR_MOBILEPAY_CODE];
+    const LUNAR_MOBILEPAY_CONFIG_CODE = 'MODULE_PAYMENT_LUNAR_MOBILEPAY_';
 
     public static function pluginVersion()
     {

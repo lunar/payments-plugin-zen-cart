@@ -2,20 +2,6 @@
 
 
 /**
- * @param array $payment_payload
- *
- * @return string
- */
-function get_lunar_pay_script( $payment_payload = array() ) {
-
-	return '<script type="text/javascript">' . "\n" .
-	       '$(window).on("load", function() { ' . "\n" .
-	       '	$("#btn_submit").attr("type", "button").attr("onclick", "pay(event)") ' . "\n" .
-	       '}) ' . "\n\n" .
-	       '</script>';
-}
-
-/**
  * Write debug information to log file
  *
  * @param        $error
