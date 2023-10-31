@@ -59,10 +59,9 @@ class lunar_admin
 	}
 
 	/**
-	 * Used to read details of an existing transaction.
-	 * @return array
+	 * 
 	 */
-	public function getTransactionHistory( $transaction_id )
+	public function fetchApiTransaction( $transaction_id )
 	{
 		global $order;
 
@@ -72,7 +71,9 @@ class lunar_admin
 			$this->currencyCode = $order->info['currency'];
 			$this->totalAmount = (string) $order->info['total'];
 
-			if ($this->parseApiTransactionResponse($lunar_history)) {
+			if (!$this->parseApiTransactionResponse($lunar_history)) {
+				return $this->getResponseError($lunar_history);
+			} else {
 				return $lunar_history;
 			}
 
@@ -83,16 +84,10 @@ class lunar_admin
 			$error = LUNAR_COMMENT_TRANSACTION_FETCH_ISSUE . $transaction_id;
 			$this->recordError( $exception, __LINE__, __FILE__, $error );
 		}
-
-		return array();
 	}
 
 	/**
 	 * Used to capture part or all of a given previously-authorized transaction.
-	 * @param      $order_id
-	 * @param      $data
-	 * @param bool $silent
-	 *
 	 * @return bool
 	 */
 	public function capture( $order_id, $data, $silent = false )
@@ -109,7 +104,8 @@ class lunar_admin
 		$this->currencyCode = $data['currency'];
 		$this->totalAmount = $data['amount'];
 
-		$transaction_ID = $this->get_transaction_id_by_order_id( $order_id );
+		$transaction = $this->get_transaction_by_order_id( $order_id );
+		$transaction_ID = $transaction->fields['transaction_id'] ?? '';
 		if ( ! $transaction_ID ) {
 			return false;
 		}
@@ -127,8 +123,7 @@ class lunar_admin
 				]
 			]);
 
-			if ( 'complete' == $apiResponse['captureState'] ) {
-				// update status in lunar
+			if ( 'completed' == $apiResponse['captureState'] ) {
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE, 
 					[
 						'transaction_type' => 'capture',
@@ -173,30 +168,29 @@ class lunar_admin
 
 	/**
 	 * Used to submit a refund for a given transaction.
-	 *
-	 * @param $order_id
-	 * @param $amount
-	 *
 	 * @return bool
 	 */
-	public function refund( $order_id, $refundAmount)
+	public function refund( $order_id )
 	{
-		global $messageStack, $order;
+		global $messageStack, $order, $currency;
 
-		$transaction_ID = $this->get_transaction_id_by_order_id( $order_id );
+		$transaction = $this->get_transaction_by_order_id( $order_id );
+		$transaction_ID = $transaction->fields['transaction_id'] ?? '';
 		if ( ! $transaction_ID ) {
 			return false;
 		}
 
 		$refundAmount = 0;
 		if ( isset( $_POST['partialrefund'] ) ) {
-			$refundAmount = (float) $_POST['refamt'];
+			$refundAmount = $_POST['refamt'];
 			if ( $refundAmount == 0 ) {
 				$error = LUNAR_COMMENT_PARTIAL_REFUND_ERROR;
 				$messageStack->add_session( $error, 'error' );
 
 				return false;
 			}
+		} else {
+			$refundAmount = $transaction->fields['order_amount'];
 		}
 
 		try {
@@ -207,8 +201,11 @@ class lunar_admin
 			$this->currencyCode = $order->info['currency'];
 			$this->totalAmount = (string) $order->info['total'];
 
+			$amountToRefund = $refundAmount + $_POST['refundedAmt'];
+			$diff = 1 / (10 ** $currency['decimal_places']);
+
 			// new status
-			if ( ( $refundAmount + $_POST['refundedAmt'] ) == $this->totalAmount ) {
+			if ( $amountToRefund == $this->totalAmount || abs($amountToRefund - $this->totalAmount) <= $diff) {
 				$new_order_status = (int) MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID;
 				$new_order_status = ( $new_order_status > 0 ? $new_order_status : 4 );
 			} else {
@@ -219,12 +216,11 @@ class lunar_admin
 			$apiResponse = $this->apiClient->payments()->refund( $transaction_ID,  [
 				'amount' => [
 					'currency' => $this->currencyCode,
-					'decimal' => $refundAmount,
+					'decimal' => (string) $refundAmount,
 				]
 			]);
 
-			if ( 'complete' == $apiResponse['refundState'] ) {
-
+			if ( 'completed' == $apiResponse['refundState'] ) {
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE,
 					[
 						'transaction_type' => ( $isPartialRefund ? 'partial_refund' : 'refund' ),
@@ -234,7 +230,8 @@ class lunar_admin
 					'transaction_id = "' . $transaction_ID . '"' ,
 				);
 
-				$comments = LUNAR_COMMENT_REFUND . $transaction_ID . "\n" . LUNAR_COMMENT_AMOUNT . $refundAmount . ' ' . $this->currencyCode;
+				$comments = $isPartialRefund ? LUNAR_COMMENT_PARTIAL_REFUND : LUNAR_COMMENT_REFUND;
+				$comments .= $transaction_ID . "\n" . LUNAR_COMMENT_AMOUNT . $refundAmount . ' ' . $this->currencyCode;
 				$this->update_order_history( $comments, $new_order_status, $order_id );
 
 				$success = LUNAR_COMMENT_REFUND_SUCCESS . $order_id;
@@ -259,15 +256,14 @@ class lunar_admin
 
 	/**
 	 * Used to void a given previously-authorized transaction.
-	 * @param $order_id
-	 *
 	 * @return bool
 	 */
 	public function void( $order_id )
 	{
 		global $messageStack, $order;
 
-		$transaction_ID = $this->get_transaction_id_by_order_id( $order_id );
+		$transaction = $this->get_transaction_by_order_id( $order_id );
+		$transaction_ID = $transaction->fields['transaction_id'] ?? '';
 		if ( ! $transaction_ID ) {
 			return false;
 		}
@@ -287,7 +283,7 @@ class lunar_admin
 				]
 			]);
 
-			if ( 'complete' == $apiResponse['cancelState'] ) {
+			if ( 'completed' == $apiResponse['cancelState'] ) {
 				// update status in lunar
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE,
 					[
@@ -344,10 +340,8 @@ class lunar_admin
 
 	/**
 	 * @param $order_id
-	 *
-	 * @return bool
 	 */
-	public function get_transaction_id_by_order_id( $order_id )
+	public function get_transaction_by_order_id( $order_id )
 	{
 		global $db, $messageStack;
 
@@ -361,7 +355,7 @@ class lunar_admin
 			return false;
 		}
 
-		return $lunarTransaction->fields['transaction_id'];
+		return $lunarTransaction;
 	}
 
 	/**
