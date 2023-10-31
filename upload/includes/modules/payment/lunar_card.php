@@ -33,6 +33,8 @@ class lunar_card extends base
 
 	private bool $testMode = false;
 	private bool $isInstantMode = false;
+	private string $paymentIntentId = '';
+	private array $apiResponse = [];
 	private $lunar_admin;
 	
 	/**
@@ -69,7 +71,6 @@ class lunar_card extends base
 		if ( IS_ADMIN_FLAG === true ) {
 			$this->tableCheckup();
 		}
-
 	}
 
 	/**
@@ -78,25 +79,61 @@ class lunar_card extends base
 	 */
 	public function before_process()
 	{
-		// skip if the request is from redirect
-		if (isset($_GET['lunar_method'])) {
-			return;
-		}
-
-		$this->setArgs();
+		global $order;
 
 		$paymentIntentId = $this->lunar_admin->getPaymentIntentCookie();
+
+		if (!isset($_GET['lunar_method'])) {
+			
+			$this->setArgs();
+
+			/** Another check to see if order total is different from payment */
+			if ($paymentIntentId) {
+				$response = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
+				if (is_array($response) && isset($response['amount']['decimal'])) {
+					if ($response['amount']['decimal'] != $this->args['amount']['decimal']) {
+						$paymentIntentId = null;
+					}
+				} else if ($response) {
+					$paymentIntentId = null;
+				}
+			}
+
+			
+			if (!$paymentIntentId) {
+				$paymentIntentId = $this->lunar_admin->createPaymentIntent($this->args);
+				$this->lunar_admin->savePaymentIntentCookie($paymentIntentId);
+			}
+			
+			if ( !$paymentIntentId ) {
+				$this->redirectToCheckoutPage();
+			}
+			
+			zen_redirect(($this->testMode ? self::TEST_REMOTE_URL : self::REMOTE_URL) . $paymentIntentId);
+		}
+		
+		/**
+		 * run the following only after redirect
+		 */
+	
 		if (!$paymentIntentId) {
-			$paymentIntentId = $this->lunar_admin->createPaymentIntent($this->args);
+			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_PAYMENT_INTENT_NOT_FOUND);
 		}
 
-		if ( !$paymentIntentId ) {
-			$this->redirectToCheckoutPage();
+		$apiResponse = $this->lunar_admin->fetchApiTransaction($this->paymentIntentId);
+
+		$this->paymentIntentId = $paymentIntentId;
+		$this->apiResponse = $apiResponse;
+
+		if (!is_array($this->apiResponse)) {
+			$this->redirectToCheckoutPage($this->apiResponse);
 		}
 
-		$this->lunar_admin->savePaymentIntentCookie($paymentIntentId);
+		if ($this->apiResponse['amount']['decimal'] != $order->info['total'] || $this->apiResponse['amount']['currency'] != $order->info['currency']) {
+			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
+		}
 
-		zen_redirect(($this->testMode ? self::TEST_REMOTE_URL : self::REMOTE_URL) . $paymentIntentId);
+		setcookie(LunarHelper::INTENT_KEY, '', 1);
 	}
 
 	/**
@@ -105,36 +142,13 @@ class lunar_card extends base
 	 */
 	public function after_process()
 	{
-		global $order, $insert_id;
-
-		$paymentMethod = $_GET['lunar_method'] ?? '';
-		if (!$paymentMethod) {
-			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_METHOD_MISSING);
-		}
-
-		$paymentIntentId = $this->lunar_admin->getPaymentIntentCookie();
-
-		if ($paymentIntentId) {
-			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_PAYMENT_INTENT_NOT_FOUND);
-		}
-
-		$apiResponse = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
-
-		if (!is_array($apiResponse)) {
-			$this->redirectToCheckoutPage($apiResponse);
-		}
-
-		if ($apiResponse['amount']['decimal'] != $order->info['total'] || $apiResponse['amount']['currency'] != $order->info['currency']) {
-			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
-		}
+		global $insert_id;
 
 		$data = [
-			'transaction_id' => $paymentIntentId,
-			'amount'         => $apiResponse['amount']['decimal'],
-			'currency'       => $apiResponse['amount']['currency'],
+			'transaction_id' => $this->paymentIntentId,
+			'currency'       => $this->apiResponse['amount']['currency'],
+			'amount'         => $this->apiResponse['amount']['decimal'],
 		];
-
-		setcookie(LunarHelper::INTENT_KEY, '', 1);
 
 		$this->insert_lunar_transaction( $data, $insert_id );
 
@@ -348,11 +362,13 @@ class lunar_card extends base
 	 */
 	public function insert_lunar_transaction( $data, $order_id )
 	{
+		global $order;
+
 		$data = [
 			'order_id'           => (int) $order_id,
 			'transaction_id'     => $data['transaction_id'],
 			'transaction_type'   => 'authorize',
-			'order_amount'       => $data['amount'],
+			'order_amount'       => $order->info['total'],
 			'transaction_amount' => $data['amount'],
 			'method_code' 		 => self::METHOD_CODE,
 		];
