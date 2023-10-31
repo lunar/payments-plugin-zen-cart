@@ -94,6 +94,7 @@ define( 'LUNAR_COMMENT_CAPTURE_SUCCESS', 'Transaction captured successfully. Ord
 define( 'LUNAR_COMMENT_CAPTURE_FAILURE', 'Error when capturing -- transaction_id: ' );
 define( 'LUNAR_COMMENT_PARTIAL_REFUND_ERROR', 'You requested a partial refund but did not specify an amount.' );
 define( 'LUNAR_COMMENT_REFUND', 'REFUND COMPLETED. Transaction ID: ' );
+define( 'LUNAR_COMMENT_PARTIAL_REFUND', 'PARTIAL REFUND. Transaction ID: ' );
 define( 'LUNAR_COMMENT_REFUND_SUCCESS', 'Transaction refunded successfully. Order: ' );
 define( 'LUNAR_COMMENT_REFUND_FAILURE', 'Error during refund -- transaction_id: ' );
 define( 'LUNAR_COMMENT_VOID', 'TRANSACTION VOIDED. Transaction ID: ' );
@@ -114,8 +115,10 @@ define( 'LUNAR_WARNING_NOT_CONFIGURED_FRONTEND', 'Lunar module is not configured
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_MISSING', 'The transaction id is missing, it seems that the authorization failed or the reference was not sent. Please try the payment again. The previous payment will not be captured.' );
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_MISMATCH', 'The transaction id couldn\'t be found, please contact the store owner, there may be a mismatch in configuration.' );
 define( 'LUNAR_ORDER_ERROR_TRANSACTION_AMOUNT_MISMATCH', 'The transaction amount is incorrect, please contact the store owner, there may be a mismatch in configuration.' );
-define( 'LUNAR_ORDER_ERROR_TRANSACTION_FAILURE', 'There is no transaction stored for this order or there has been an error during transaction. Check the Lunar log files.' );
-
+define( 'LUNAR_ORDER_ERROR_TRANSACTION_FAILURE', 'There is no transaction stored for this order there has been an error during transaction. Check the Lunar log files.' );
+define( 'LUNAR_ORDER_ERROR_PAYMENT_INTENT_NOT_FOUND', 'Transaction ID not found. Please try again or contact system administrator.');
+define( 'LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH', 'The transaction amount or currency mismatch. Please try again or contact system administrator.');
+define( 'LUNAR_ORDER_ERROR_METHOD_MISSING', 'The payment method is missing. Try again.');
 
 // PAYMENT STATUSES
 

@@ -78,6 +78,7 @@ class lunar_card extends base
 	 */
 	public function before_process()
 	{
+		// skip if the request is from redirect
 		if (isset($_GET['lunar_method'])) {
 			return;
 		}
@@ -90,9 +91,7 @@ class lunar_card extends base
 		}
 
 		if ( !$paymentIntentId ) {
-			setcookie(LunarHelper::INTENT_KEY, '', 1); // clear cookie
 			$this->redirectToCheckoutPage();
-			return;
 		}
 
 		$this->lunar_admin->savePaymentIntentCookie($paymentIntentId);
@@ -110,20 +109,31 @@ class lunar_card extends base
 
 		$paymentMethod = $_GET['lunar_method'] ?? '';
 		if (!$paymentMethod) {
-			return;
+			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_METHOD_MISSING);
+		}
+
+		$paymentIntentId = $this->lunar_admin->getPaymentIntentCookie();
+
+		if ($paymentIntentId) {
+			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_PAYMENT_INTENT_NOT_FOUND);
+		}
+
+		$apiResponse = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
+
+		if (!is_array($apiResponse)) {
+			$this->redirectToCheckoutPage($apiResponse);
+		}
+
+		if ($apiResponse['amount']['decimal'] != $order->info['total'] || $apiResponse['amount']['currency'] != $order->info['currency']) {
+			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
 		}
 
 		$data = [
-			'transaction_id' => $this->lunar_admin->getPaymentIntentCookie(),
-			'amount'         => (string) $order->info['total'],
-			'currency'       => $order->info['currency'],
+			'transaction_id' => $paymentIntentId,
+			'amount'         => $apiResponse['amount']['decimal'],
+			'currency'       => $apiResponse['amount']['currency'],
 		];
 
-		/**
-		 * Clear cookie. 
-		 * If capture fails, the admin can do that manually.
-		 * If anything else fails, the customer can proceed with another payment
-		 */
 		setcookie(LunarHelper::INTENT_KEY, '', 1);
 
 		$this->insert_lunar_transaction( $data, $insert_id );
@@ -255,10 +265,9 @@ class lunar_card extends base
 	 */
 	public function pre_confirmation_check()
 	{
-
 		global $messageStack;
 		if ( MODULE_PAYMENT_LUNAR_APP_KEY == '' || MODULE_PAYMENT_LUNAR_PUBLIC_KEY == '' ) {
-			$messageStack->add_session( 'checkout_payment', LUNAR_WARNING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
+			$messageStack->add_session( FILENAME_CHECKOUT_PAYMENT, LUNAR_WARNING_NOT_CONFIGURED_FRONTEND . ' <!-- [' . $this->code . '] -->', 'error' );
 			zen_redirect( zen_href_link( FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false ) );
 		}
 	}
@@ -321,13 +330,15 @@ class lunar_card extends base
 	/**
 	 *
 	 */
-	public function redirectToCheckoutPage()
+	public function redirectToCheckoutPage($errorMessage = null)
 	{
 		global $messageStack;
 
-		$messageStack->add_session( FILENAME_CHECKOUT_CONFIRMATION, 
-			LUNAR_ERROR_INVALID_REQUEST . ' <!-- [' . $this->code . '] -->', 'error' 
-		);
+		// make sure we don't keep old payment id
+		setcookie(LunarHelper::INTENT_KEY, '', 1);
+
+		$errorMessage = $errorMessage ?? LUNAR_ERROR_INVALID_REQUEST;
+		$messageStack->add_session( FILENAME_CHECKOUT_CONFIRMATION, $errorMessage, 'error' );
 		zen_redirect( zen_href_link( FILENAME_CHECKOUT_CONFIRMATION, '', 'SSL', true, false ) );
 	}
 
@@ -437,36 +448,36 @@ class lunar_card extends base
 
 	/**
 	 * Used to capture part or all of a given previously-authorized transaction.
-	 *
+	 * @see orders.php
 	 * @return bool
 	 */
 	public function _doCapt( $order_id, $status = '', $amount, $currency)
 	{
 		$data = [
-			'amount' => (string) $amount,
 			'currency' => $currency,
+			'amount' => (string) $amount,
 		];
 		return $this->lunar_admin->capture($order_id, $data);
 	}
 
 	/**
 	 * Used to submit a refund for a given transaction.
-	 *
+	 * @see orders.php
 	 * @return bool
 	 */
-	public function _doRefund( $order_id, $amount = 'Full', $note = '' )
+	public function _doRefund( $order_id )
 	{
-		return $this->lunar_admin->refund( $order_id, $amount, $note );
+		return $this->lunar_admin->refund( $order_id );
 	}
 
 	/**
 	 * Used to void a given previously-authorized transaction.
-	 *
+	 * @see orders.php
 	 * @return bool
 	 */
-	public function _doVoid( $order_id, $note = '' )
+	public function _doVoid( $order_id )
 	{
-		return $this->lunar_admin->void( $order_id, $note );
+		return $this->lunar_admin->void( $order_id );
 	}
 
     /**
