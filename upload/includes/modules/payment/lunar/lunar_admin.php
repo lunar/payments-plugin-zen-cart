@@ -36,7 +36,7 @@ class lunar_admin
      */
     public function savePaymentIntentCookie($paymentIntentId)
     {
-        return setcookie(LunarHelper::INTENT_KEY, $paymentIntentId, 0, '', '', true, true);
+        return setcookie(LunarHelper::INTENT_KEY, $paymentIntentId, 0, '', '', false, true);
     }
 	
 	/**
@@ -64,9 +64,14 @@ class lunar_admin
 	 */
 	public function getTransactionHistory( $transaction_id )
 	{
+		global $order;
+
 		try {
 			$lunar_history = $this->apiClient->payments()->fetch( $transaction_id );
-			// if ( $lunar_history && $lunar_history['successful'] ) { // uncomment later
+			
+			$this->currencyCode = $order->info['currency'];
+			$this->totalAmount = (string) $order->info['total'];
+
 			if ($this->parseApiTransactionResponse($lunar_history)) {
 				return $lunar_history;
 			}
@@ -122,23 +127,11 @@ class lunar_admin
 				]
 			]);
 
-			if (!$this->parseApiTransactionResponse($apiResponse)) {
-				$error = LUNAR_COMMENT_CAPTURE_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
-				$error .= "<br>" . $this->getResponseError($apiResponse);
-				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
-				// if capture is silent the user doesn't get a message so we add it in the admin history
-				if ($silent) {
-					$this->update_order_history( $error, 0, $order_id );
-				}
-				return false;
-			}
-
 			if ( 'complete' == $apiResponse['captureState'] ) {
 				// update status in lunar
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE, 
 					[
-						'transaction_type' => 'capture' 
+						'transaction_type' => 'capture',
 					],
 					'update',
 					'transaction_id = "' . $transaction_ID . '"' 
@@ -152,6 +145,16 @@ class lunar_admin
 					$success = LUNAR_COMMENT_CAPTURE_SUCCESS . $order_id;
 					$messageStack->add_session( $success, 'success' );
 				}
+			} else {
+				$error = LUNAR_COMMENT_CAPTURE_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
+				$error .= "<br>" . $this->getResponseError($apiResponse);
+				$messageStack->add_session( $error, 'error' );
+				lunar_debug( $error, __LINE__, __FILE__ );
+				// if capture is silent the user doesn't get a message so we add it in the admin history
+				if ($silent) {
+					$this->update_order_history( $error, 0, $order_id );
+				}
+				return false;
 			}
 		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_CAPTURE_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
@@ -220,14 +223,6 @@ class lunar_admin
 				]
 			]);
 
-			if (!$this->parseApiTransactionResponse($apiResponse)) {
-				$error = LUNAR_COMMENT_REFUND_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
-				$error .= "<br>" . $this->getResponseError($apiResponse);
-				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
-				return false;
-			}
-
 			if ( 'complete' == $apiResponse['refundState'] ) {
 
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE,
@@ -245,6 +240,12 @@ class lunar_admin
 				$success = LUNAR_COMMENT_REFUND_SUCCESS . $order_id;
 				$messageStack->add_session( $success, 'success' );
 
+			} else {
+				$error = LUNAR_COMMENT_REFUND_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
+				$error .= "<br>" . $this->getResponseError($apiResponse);
+				$messageStack->add_session( $error, 'error' );
+				lunar_debug( $error, __LINE__, __FILE__ );
+				return false;
 			}
 		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_REFUND_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
@@ -286,19 +287,11 @@ class lunar_admin
 				]
 			]);
 
-			if (!$this->parseApiTransactionResponse($apiResponse)) {
-				$error = LUNAR_COMMENT_VOID_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
-				$error .= "<br>" . $this->getResponseError($apiResponse);
-				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
-				return false;
-			}
-
 			if ( 'complete' == $apiResponse['cancelState'] ) {
 				// update status in lunar
 				zen_db_perform( LunarHelper::LUNAR_DB_TABLE,
 					[
-						'transaction_type' => 'void'
+						'transaction_type' => 'void',
 					],
 					'update',
 					'transaction_id = "' . $transaction_ID . '"'
@@ -309,6 +302,12 @@ class lunar_admin
 				// success message
 				$success = LUNAR_COMMENT_VOID_SUCCESS . $order_id;
 				$messageStack->add_session( $success, 'success' );
+			} else {
+				$error = LUNAR_COMMENT_VOID_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
+				$error .= "<br>" . $this->getResponseError($apiResponse);
+				$messageStack->add_session( $error, 'error' );
+				lunar_debug( $error, __LINE__, __FILE__ );
+				return false;
 			}
 		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_VOID_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
@@ -325,7 +324,7 @@ class lunar_admin
 	 * @param $new_order_status
 	 * @param $order_id
 	 */
-	public function update_order_history( $comments, $new_order_status, $order_id )
+	private function update_order_history( $comments, $new_order_status, $order_id )
 	{
 		// TABLE_ORDERS_STATUS_HISTORY
 		$updated_by = function_exists( 'zen_get_admin_name' ) ? zen_get_admin_name( $_SESSION['admin_id'] ) : 'system';
@@ -406,7 +405,7 @@ class lunar_admin
 				break;
 		}
 		$message       = LUNAR_ERROR . $message;
-		$error_message = $this->get_response_error( $exception->getJsonBody() );
+		$error_message = $this->getResponseError( $exception->getJsonBody() );
 		if ( $context ) {
 			$message = $context . PHP_EOL . $message;
 		}
@@ -420,32 +419,6 @@ class lunar_admin
 		lunar_debug( $message . PHP_EOL . json_encode( $exception->getJsonBody() ), $line, $file );
 
 		return $message;
-	}
-
-	/**
-	 * Gets errors from a failed api request
-	 *
-	 * @param array $result The result returned by the api wrapper.
-	 *
-	 * @return string
-	 */
-	public function get_response_error( $result )
-	{
-		$error = array();
-		// if this is just one error
-		if ( isset( $result['text'] ) ) {
-			return $result['text'];
-		}
-
-		// otherwise this is a multi field error
-		if ( $result ) {
-			foreach ( $result as $field_error ) {
-				$error[] = $field_error['field'] . ':' . $field_error['message'];
-			}
-		}
-		$error_message = implode( ' ', $error );
-
-		return $error_message;
 	}
 
 	/**
@@ -468,33 +441,9 @@ class lunar_admin
     {   
         $matchCurrency = $this->currencyCode == ($transaction['amount']['currency'] ?? '');
         $matchAmount = $this->totalAmount == ($transaction['amount']['decimal'] ?? '');
-        
-        // if (true == $transaction['authorisationCreated'] && !($matchCurrency && $matchAmount)) {
-        //     $this->errorMessage = ' Currency or Amount doesn\'t match. Data was tampered. ';
-        //     // $this->maybeCancelPayment();
-        //     return false;
-        // }
 
         return (true == $transaction['authorisationCreated'] && $matchCurrency && $matchAmount);
     }
-
-    
-    // /**
-    //  * 
-    //  */
-    // private function maybeCancelPayment(): void
-    // {
-    //     // cancel only authorized payments
-    //     if (!$this->captured) {
-    //         $result = $this->lunarApiClient->payments()->cancel($this->paymentIntentId, $this->getPaymentData());
-    //     }
-
-    //     if (!empty($result) && 'completed' == $result['cancelState']) {
-    //         $this->errorMessage .= 'Your authorized payment was cancelled.';
-    //     }
-
-    //     $this->context->cookie->__unset($this->intentIdKey);
-    // }
 
     /**
      * Gets errors from a failed api request
@@ -524,8 +473,6 @@ class lunar_admin
 
 	/**
 	 * install lunar payment model
-	 *
-	 * @global type $db
 	 */
 	public function install()
 	{
@@ -574,8 +521,6 @@ class lunar_admin
 
 	/**
 	 * remove module
-	 *
-	 * @global type $db
 	 */
 	public function remove()
 	{
@@ -597,7 +542,8 @@ class lunar_admin
 			transaction_amount VARCHAR(50) NOT NULL,
 			transaction_type ENUM(" . implode(', ', LunarHelper::PAYMENT_TYPES) . ") NOT NULL,
 			method_code VARCHAR(50) NOT NULL,
-			created_at DATETIME NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY (id) );"
 		);
 	}

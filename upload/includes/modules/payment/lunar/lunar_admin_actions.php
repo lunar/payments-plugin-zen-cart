@@ -181,26 +181,27 @@ class lunar_admin_actions {
 	 * @return $this
 	 */
 	private function set_totals() {
-		$lunar_admin      = new lunar_admin();
-		$response           = $lunar_admin->getTransactionHistory( $this->app_id, $this->fields['transaction_id'] );
-		$this->amount_total = $response['amount'];
+		$lunar_admin = new lunar_admin();
+		$response  = $lunar_admin->getTransactionHistory( $this->fields['transaction_id'] );
 
-		if ( ! ( isset( $response['trail'] ) && is_array( $response['trail'] ) && sizeof( $response['trail'] ) ) ) {
+		if (!isset($response['amount'])) {
 			return $this;
 		}
 
+		$this->amount_total = $response['amount']['decimal'];
+
 		// loop trough all transactions and add up the amounts
-		foreach ( $response['trail'] as $key => $value ) {
-			if ( isset( $value['capture'] ) ) {
-				$this->capture_total += $value['amount'];
-			}
-			if ( isset( $value['refund'] ) ) {
-				$this->refund_total += $value['amount'];
-			}
-			if ( isset( $value['void'] ) ) {
-				$this->refund_total += $value['amount'];
-			}
-		}
+		// foreach ( $response['trail'] as $key => $value ) {
+		// 	if ( isset( $value['capture'] ) ) {
+		// 		$this->capture_total += $value['amount'];
+		// 	}
+		// 	if ( isset( $value['refund'] ) ) {
+		// 		$this->refund_total += $value['amount'];
+		// 	}
+		// 	if ( isset( $value['void'] ) ) {
+		// 		$this->refund_total += $value['amount'];
+		// 	}
+		// }
 
 		return $this;
 	}
