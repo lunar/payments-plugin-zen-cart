@@ -21,10 +21,10 @@ class lunar_admin_actions {
 	 * constructor
 	 * @param $order_id
 	 */
-	public function __construct( $order_id )
+	public function __construct( $order_id, $paymentMethodCode )
 	{
 		$this->order_id = $order_id;
-		$this->lunar_admin = new lunar_admin();
+		$this->lunar_admin = new lunar_admin($paymentMethodCode);
 		$this->set_transaction_history()->set_totals();
 	}
 
