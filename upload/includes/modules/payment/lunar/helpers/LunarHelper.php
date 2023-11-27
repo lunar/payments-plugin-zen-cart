@@ -31,4 +31,22 @@ class LunarHelper
     {
         return json_decode(file_get_contents(dirname(__DIR__) . '/composer.json'))->version;
     }
+
+    /**
+     * Write debug information to log file
+     *
+     * @param        $error
+     * @param int    $lineNo
+     * @param string $file
+     */
+    public static function writeLog( $error, $lineNo = 0, $file = '' ) {
+        $dateTime = date('Y-m-d_H:i:s');
+        $logfilename = 'includes/modules/payment/lunar/logs/lunar_' . $dateTime . '.log';
+        if ( defined( 'DIR_FS_LOGS' ) ) {
+            $logfilename = DIR_FS_LOGS . '/lunar__' . $dateTime . '.log';
+        }
+        $fp = @fopen( $logfilename, 'a' );
+        @fwrite( $fp, date( 'M d Y G:i' ) . ' -- ' . $error . "\n File:" . $file . "\n Line:" . $lineNo . "\n\n" );
+        @fclose( $fp );
+    }
 }

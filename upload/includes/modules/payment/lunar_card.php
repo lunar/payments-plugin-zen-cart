@@ -4,7 +4,6 @@ if (! class_exists('Lunar\\Lunar') ) {
 	require_once( __DIR__ . '/lunar/vendor/autoload.php' );
 }
 require_once( __DIR__ . '/lunar/lunar_admin.php' );
-require_once( __DIR__ . '/lunar/lunar.php' );
 require_once( __DIR__ . '/lunar/lunar_admin_actions.php' );
 
 use Lunar\Payment\helpers\LunarHelper;
@@ -459,7 +458,7 @@ class lunar_card extends base
 	 */
 	public function debug( $error, $lineNo = 0, $file = '' )
 	{
-		lunar_debug( $error, $lineNo, $file );
+		LunarHelper::writeLog( $error, $lineNo, $file );
 	}
 
 	/**

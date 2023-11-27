@@ -51,7 +51,7 @@ class lunar_admin
 				return $paymentIntentId;
 			}
 
-			lunar_debug( LUNAR_ERROR_INVALID_REQUEST, __LINE__, __FILE__ );
+			$this->writeLog( LUNAR_ERROR_INVALID_REQUEST, __LINE__, __FILE__ );
 
 		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$this->recordError( $exception, __LINE__, __FILE__, LUNAR_ERROR_EXCEPTION );
@@ -78,7 +78,7 @@ class lunar_admin
 			}
 
 			$error = LUNAR_COMMENT_TRANSACTION_FETCH_ISSUE . $transaction_id;
-			lunar_debug( $error, __LINE__, __FILE__ );
+			$this->writeLog( $error, __LINE__, __FILE__ );
 
 		} catch ( \Lunar\Exception\ApiException $exception ) {
 			$error = LUNAR_COMMENT_TRANSACTION_FETCH_ISSUE . $transaction_id;
@@ -144,7 +144,7 @@ class lunar_admin
 				$error = LUNAR_COMMENT_CAPTURE_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 				$error .= "<br>" . $this->getResponseError($apiResponse);
 				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
+				$this->writeLog( $error, __LINE__, __FILE__ );
 				// if capture is silent the user doesn't get a message so we add it in the admin history
 				if ($silent) {
 					$this->update_order_history( $error, 0, $order_id );
@@ -241,7 +241,7 @@ class lunar_admin
 				$error = LUNAR_COMMENT_REFUND_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 				$error .= "<br>" . $this->getResponseError($apiResponse);
 				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
+				$this->writeLog( $error, __LINE__, __FILE__ );
 				return false;
 			}
 		} catch ( \Lunar\Exception\ApiException $exception ) {
@@ -302,7 +302,7 @@ class lunar_admin
 				$error = LUNAR_COMMENT_VOID_FAILURE . $transaction_ID . '<br/>' . LUNAR_COMMENT_ORDER . $order_id;
 				$error .= "<br>" . $this->getResponseError($apiResponse);
 				$messageStack->add_session( $error, 'error' );
-				lunar_debug( $error, __LINE__, __FILE__ );
+				$this->writeLog( $error, __LINE__, __FILE__ );
 				return false;
 			}
 		} catch ( \Lunar\Exception\ApiException $exception ) {
@@ -410,7 +410,7 @@ class lunar_admin
 		if ( $messageStack ) {
 			$messageStack->add_session( nl2br( $message ), 'error' );
 		}
-		lunar_debug( $message . PHP_EOL . json_encode( $exception->getJsonBody() ), $line, $file );
+		$this->writeLog( $message . PHP_EOL . json_encode( $exception->getJsonBody() ), $line, $file );
 
 		return $message;
 	}
@@ -463,6 +463,14 @@ class lunar_admin
         }
 
         return implode(' ', $error);
+    }
+
+    /**
+     * 
+     */
+    private function writeLog($error, $lineNo = 0, $file = '')
+    {
+		LunarHelper::writeLog($error, $lineNo, $file);
     }
 
 	/**
