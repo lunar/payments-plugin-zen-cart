@@ -120,12 +120,6 @@ class lunar_card extends base
 
 		$apiResponse = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
 
-		$this->lunarData = [
-			'transaction_id' => $paymentIntentId,
-			'currency'       => $apiResponse['amount']['currency'],
-			'amount'         => $apiResponse['amount']['decimal'],
-		];
-
 		if (!is_array($apiResponse)) {
 			$this->redirectToCheckoutPage($apiResponse);
 		}
@@ -138,6 +132,12 @@ class lunar_card extends base
 		) {
 			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
 		}
+
+		$this->lunarData = [
+			'transaction_id' => $paymentIntentId,
+			'currency'       => $apiResponse['amount']['currency'],
+			'amount'         => $apiResponse['amount']['decimal'],
+		];
 
 		setcookie(LunarHelper::INTENT_KEY, '', 1);
 	}
