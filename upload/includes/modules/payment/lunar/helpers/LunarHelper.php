@@ -40,8 +40,8 @@ class LunarHelper
      * @param string $file
      */
     public static function writeLog( $error, $lineNo = 0, $file = '' ) {
-        $dateTime = date('Y-m-d_H:i:s');
-        $logfilename = 'includes/modules/payment/lunar/logs/lunar_' . $dateTime . '.log';
+        $dateTime = date('Y-m-d_H-i-s');
+        $logfilename = dirname(__DIR__, 5) . '/includes/modules/payment/lunar/logs/lunar_' . $dateTime . '.log';
         if ( defined( 'DIR_FS_LOGS' ) ) {
             $logfilename = DIR_FS_LOGS . '/lunar__' . $dateTime . '.log';
         }
