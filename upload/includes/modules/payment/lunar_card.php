@@ -33,8 +33,7 @@ class lunar_card extends base
 
 	private bool $testMode = false;
 	private bool $isInstantMode = false;
-	private string $paymentIntentId = '';
-	private array $apiResponse = [];
+	private array $lunarData = [];
 	private $lunar_admin;
 	
 	/**
@@ -90,7 +89,7 @@ class lunar_card extends base
 			/** Another check to see if order total is different from payment */
 			if ($paymentIntentId) {
 				$response = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
-				if (is_array($response) && isset($response['amount']['decimal'])) {
+				if (is_array($response) && isset($response['amount'])) {
 					if ($response['amount']['decimal'] != $this->args['amount']['decimal']) {
 						$paymentIntentId = null;
 					}
@@ -98,7 +97,6 @@ class lunar_card extends base
 					$paymentIntentId = null;
 				}
 			}
-
 			
 			if (!$paymentIntentId) {
 				$paymentIntentId = $this->lunar_admin->createPaymentIntent($this->args);
@@ -120,16 +118,24 @@ class lunar_card extends base
 			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_PAYMENT_INTENT_NOT_FOUND);
 		}
 
-		$apiResponse = $this->lunar_admin->fetchApiTransaction($this->paymentIntentId);
+		$apiResponse = $this->lunar_admin->fetchApiTransaction($paymentIntentId);
 
-		$this->paymentIntentId = $paymentIntentId;
-		$this->apiResponse = $apiResponse;
+		$this->lunarData = [
+			'transaction_id' => $paymentIntentId,
+			'currency'       => $apiResponse['amount']['currency'],
+			'amount'         => $apiResponse['amount']['decimal'],
+		];
 
-		if (!is_array($this->apiResponse)) {
-			$this->redirectToCheckoutPage($this->apiResponse);
+		if (!is_array($apiResponse)) {
+			$this->redirectToCheckoutPage($apiResponse);
 		}
 
-		if ($this->apiResponse['amount']['decimal'] != $order->info['total'] || $this->apiResponse['amount']['currency'] != $order->info['currency']) {
+		if (
+			isset($apiResponse['amount'])
+			&&
+			($apiResponse['amount']['decimal'] != $order->info['total'] 
+			|| $apiResponse['amount']['currency'] != $order->info['currency'])
+		) {
 			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
 		}
 
@@ -144,21 +150,15 @@ class lunar_card extends base
 	{
 		global $insert_id;
 
-		$data = [
-			'transaction_id' => $this->paymentIntentId,
-			'currency'       => $this->apiResponse['amount']['currency'],
-			'amount'         => $this->apiResponse['amount']['decimal'],
-		];
+		$this->insert_lunar_transaction( $this->lunarData, $insert_id );
 
-		$this->insert_lunar_transaction( $data, $insert_id );
-
-		$this->insert_order_history( $data, $insert_id );
+		$this->insert_order_history( $this->lunarData, $insert_id );
 
 		zen_db_perform( TABLE_ORDERS, array( 'orders_status' => (int) MODULE_PAYMENT_LUNAR_AUTHORIZE_ORDER_STATUS_ID ), 'update', 'orders_id = "' . (int) $insert_id . '"' );
 
 		// payment capture
 		if ($this->isInstantMode) {
-			$this->lunar_admin->capture( $insert_id, $data, true );
+			$this->lunar_admin->capture( $insert_id, $this->lunarData, true );
 		}
 	}
 
