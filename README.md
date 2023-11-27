@@ -1,4 +1,4 @@
-# ZenCart plugin for Lunar
+# Lunar Online Payments for ZenCart
 
 The software is provided “as is”, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement.
 
@@ -9,6 +9,8 @@ The software is provided “as is”, without warranty of any kind, express or i
 
 
 ## Installation
+
+*NOTE: It requires PHP version >=7.4
 
   After you have your Zen Cart setup, follow these simple steps:
   1. Signup at [lunar.app](https://lunar.app) (it’s free)
@@ -24,10 +26,9 @@ The software is provided “as is”, without warranty of any kind, express or i
 Under the Zen Cart Lunar settings, you can:
  * Update the payment method text in the payment gateways list
  * Update the payment method description in the payment gateways list
- * Update the title that shows up in the payment popup
- * Add public & app keys
- * Set the status the order should get into when you do a refund/void/capture
- * Change the capture type (Instant/Manual via the transaction tool)
+ * Add app & public keys and configuration ID for the MobilePay method
+ * Set the status the order should get into when you do a capture/refund/void
+ * Change the capture type (Instant or Delayed via the transaction tool)
 
 
 
@@ -37,11 +38,11 @@ The following actions are available by clicking on the `Click for Additional Pay
 
  1. Capture
  * In Instant mode, the orders are captured automatically
- * In delayed mode you can capture an order using the in order transaction table actions. In that table you will see Capture when this is available
+ * In delayed mode you can capture an order using the in order transaction table actions. In that table you will see `Capture` when this is available
  2. Refund
-   * To refund an order you can use the in order transaction table actions, this is only available for orders that have been captured. Click the button and follow the instructions
+   * To refund an order you can use the in order transaction table actions, this is only available for orders that have been captured. Click the `Refund` button and follow the instructions
  3. Void
-   * To void an order you can use the in order transaction table actions. You can only do this if the order is not captured, if you have captured already use the refund.
+   * To void an order you can use the in order transaction table actions. You can only do this if the order is not captured; if you have captured already use the refund.
 
 ## Available features
 
@@ -54,3 +55,12 @@ The following actions are available by clicking on the `Click for Additional Pay
 3. Void
    * Zencart admin panel: full void
    * Lunar admin panel: full/partial void
+
+
+## Changelog
+
+### 2.0.0
+- Changed flow to hosted checkout & added MobilePay method
+
+### 1.0.0
+- Initial commit
