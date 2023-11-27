@@ -338,7 +338,7 @@ abstract class lunar_abstract_method extends base
 			'orders_id'         => (int) $order_id,
 			'orders_status_id'  => (int) $this->getConfig('AUTHORIZE_ORDER_STATUS_ID'),
 			'customer_notified' => - 1,
-			'date_added'        => 'NOW()',
+			'date_added'        => date('Y-m-d H:i:s'),
 			'updated_by'        => 'system'
 		];
 		zen_db_perform( TABLE_ORDERS_STATUS_HISTORY, $data );

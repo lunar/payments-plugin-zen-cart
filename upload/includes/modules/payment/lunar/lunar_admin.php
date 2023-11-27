@@ -343,7 +343,7 @@ class lunar_admin
 			'orders_id'         => (int) $order_id,
 			'orders_status_id'  => $new_order_status,
 			'customer_notified' => - 1,
-			'date_added'        => 'now()',
+			'date_added'        => date('Y-m-d H:i:s'),
 			'updated_by'        => $updated_by
 		];
 		zen_db_perform( TABLE_ORDERS_STATUS_HISTORY, $data );
