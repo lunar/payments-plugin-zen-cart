@@ -10,11 +10,7 @@ define( 'LUNAR_TEXT_PAYMENT_STATUS', 'Payment Status' );
 define( 'LUNAR_TEXT_PAYMENT_DATE', 'Payment Date<br>(Y-m-d H:i:s)' );
 define( 'LUNAR_TEXT_ACTION', 'Action' );
 
-define( 'MODULE_PAYMENT_LUNAR_AUTHORIZE_ORDER_STATUS_ID', 1 );
-
 define( 'LUNAR_CAPTURE_BUTTON_TEXT_FULL', 'Capture' );
-
-define( 'MODULE_PAYMENT_LUNAR_REFUND_ORDER_STATUS_ID', 2 );
 define( 'LUNAR_REFUND_BUTTON_TEXT_FULL', 'Full Refund' );
 define( 'LUNAR_REFUND_BUTTON_TEXT', 'Refund' );
 define( 'LUNAR_REFUND_SECTION_TITLE', 'Order refund' );

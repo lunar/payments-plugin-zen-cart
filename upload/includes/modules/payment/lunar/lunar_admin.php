@@ -513,6 +513,7 @@ class lunar_admin
 
 		$defaultTitle = constant('LUNAR_ADMIN_METHOD_TITLE_VALUE_' . strtoupper($this->paymentMethod));
 		$defaultDescription = constant('LUNAR_ADMIN_METHOD_DESCRIPTION_VALUE_' . strtoupper($this->paymentMethod));
+		$authorizedOrderStatusConstName = 'MODULE_PAYMENT_LUNAR_' . strtoupper($this->paymentMethod) . '_AUTHORIZE_ORDER_STATUS_ID';
 
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added)
@@ -543,6 +544,9 @@ class lunar_admin
 		              VALUES ('" . LUNAR_ADMIN_PAYMENT_ZONE_TITLE . "', '" . $this->getKey('ZONE') . "', '0', '" . LUNAR_ADMIN_PAYMENT_ZONE_DESCRIPTION . "', '6', '90', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+		               VALUES ('', '" . $authorizedOrderStatusConstName . "', '1', '', '6', '100', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
+		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
+		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
 		               VALUES ('" . LUNAR_ADMIN_CAPTURE_STATUS_TITLE . "', '" . $this->getKey('CAPTURE_ORDER_STATUS_ID') . "', '2', '" . LUNAR_ADMIN_CAPTURE_STATUS_DESCRIPTION . "', '6', '100', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())" );
 		$db->Execute( "INSERT INTO " . TABLE_CONFIGURATION .
 		              " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
@@ -567,7 +571,7 @@ class lunar_admin
 	public function remove()
 	{
 		global $db;
-		$db->Execute( "DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_%'" );
+		$db->Execute( "DELETE FROM " . TABLE_CONFIGURATION . " WHERE configuration_key LIKE 'MODULE\_PAYMENT\_LUNAR\_" . strtoupper($this->paymentMethod) . "%'" );
 	}
 
 	/**
