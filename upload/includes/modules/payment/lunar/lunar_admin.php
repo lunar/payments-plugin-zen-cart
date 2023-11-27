@@ -582,7 +582,7 @@ class lunar_admin
 			transaction_id VARCHAR(100) NOT NULL,
 			order_amount VARCHAR(50) NOT NULL,
 			transaction_amount VARCHAR(50) NOT NULL,
-			transaction_type ENUM('" . implode("','", LunarHelper::PAYMENT_TYPES) . "') NOT NULL,
+			transaction_type ENUM('" . implode("','", array_keys(LunarHelper::PAYMENT_TYPES)) . "') NOT NULL,
 			method_code VARCHAR(50) NOT NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
