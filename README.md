@@ -10,6 +10,8 @@ The software is provided “as is”, without warranty of any kind, express or i
 
 ## Installation
 
+*NOTE: It requires PHP version >=7.4
+
   After you have your Zen Cart setup, follow these simple steps:
   1. Signup at [lunar.app](https://lunar.app) (it’s free)
   1. Create an account
