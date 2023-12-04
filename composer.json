@@ -1,6 +1,6 @@
 {
-  "name": "lunar/plugin-zencart",
-  "description": "Lunar Zen Cart gateway development",
+  "name": "lunar/payments-plugin-zen-cart",
+  "description": "Lunar Online Payments for ZenCart",
   "license": "MIT",
   "authors": [
     {
