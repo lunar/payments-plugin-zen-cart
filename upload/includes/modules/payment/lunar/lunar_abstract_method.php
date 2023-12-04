@@ -126,13 +126,10 @@ abstract class lunar_abstract_method extends base
 			$this->redirectToCheckoutPage($apiResponse);
 		}
 
-		if (
-			isset($apiResponse['amount'])
-			&&
-			($apiResponse['amount']['decimal'] != $order->info['total'] 
-			|| $apiResponse['amount']['currency'] != $order->info['currency'])
-		) {
-			$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
+		if (isset($apiResponse['amount'])) {
+			if ($apiResponse['amount']['decimal'] != $order->info['total'] || $apiResponse['amount']['currency'] != $order->info['currency']) {
+				$this->redirectToCheckoutPage(LUNAR_ORDER_ERROR_AMOUNT_CURRENCY_MISMATCH);
+			}
 		}
 
 		$this->lunarData = [
