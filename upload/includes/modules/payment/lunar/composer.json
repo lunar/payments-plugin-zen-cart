@@ -1,7 +1,7 @@
 {
-  "name": "lunar/plugin-zencart",
+  "name": "lunar/payments-plugin-zen-cart",
   "description": "Lunar Online Payments for ZenCart",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": [
       "MIT"
   ],

@@ -59,6 +59,9 @@ The following actions are available by clicking on the `Click for Additional Pay
 
 ## Changelog
 
+### 2.0.1
+- Fixed check for amount & currency on callback
+
 ### 2.0.0
 - Changed flow to hosted checkout & added MobilePay method
 
